@@ -6,7 +6,7 @@ export class GameScene {
   readonly renderer: THREE.WebGLRenderer;
 
   constructor(private readonly container: HTMLElement) {
-    this.renderer = new THREE.WebGLRenderer({ antialias: false });
+    this.renderer = new THREE.WebGLRenderer({ antialias: false, preserveDrawingBuffer: true });
     this.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
     this.renderer.shadowMap.enabled = true;
     this.renderer.domElement.dataset.testid = 'game-canvas';

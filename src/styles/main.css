@@ -179,4 +179,8 @@ canvas {
   .controls-help {
     display: none;
   }
+
+  .center-message {
+    display: none;
+  }
 }

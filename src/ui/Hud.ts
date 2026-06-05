@@ -39,7 +39,7 @@ export class Hud {
     setText(this.root, 'position', `Pos: ${player.position.x.toFixed(2)}, ${player.position.z.toFixed(2)}`);
     setText(this.root, 'message', message);
     const bossPanel = this.root.querySelector<HTMLElement>('.boss');
-    if (bossPanel) bossPanel.hidden = boss.fsm.state === 'Dead';
+    if (bossPanel) bossPanel.hidden = boss.fsm.state === 'Dead' || boss.fsm.state === 'Idle';
     this.root.dataset.playerState = player.fsm.state;
     this.root.dataset.playerPosition = `${player.position.x.toFixed(2)},${player.position.z.toFixed(2)}`;
   }
