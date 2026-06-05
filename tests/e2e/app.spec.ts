@@ -16,6 +16,12 @@ test('player starts in a safe readable area', async ({ page }) => {
   await page.waitForTimeout(900);
 
   await expect(hud).toContainText('HP 100/100');
+  await expect(hud).toHaveAttribute('data-player-state', /Idle|Walk|Run/);
+
+  const cameraPosition = await page.locator('#app').getAttribute('data-camera-position');
+  const cameraY = Number(cameraPosition?.split(',')[1]);
+
+  expect(cameraY).toBeGreaterThan(2);
 });
 
 test('player moves and attack input changes state', async ({ page }) => {
