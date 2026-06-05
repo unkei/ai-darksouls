@@ -5,13 +5,13 @@ type AtlasQuadrant = 'wall' | 'floor' | 'armor' | 'backdrop';
 
 export const createAtlasTexture = (
   quadrant: AtlasQuadrant,
-  repeat: [number, number] = [1, 1],
+  _repeat: [number, number] = [1, 1],
 ): THREE.Texture => {
   const texture = new THREE.TextureLoader().load(ATLAS_URL);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(repeat[0] * 0.5, repeat[1] * 0.5);
+  texture.repeat.set(0.5, 0.5);
   const offsets = {
     wall: [0, 0.5],
     floor: [0.5, 0.5],
