@@ -16,7 +16,8 @@ describe('GamepadInput', () => {
     };
     const input = new GamepadInput(() => [pad]).update();
 
-    expect(input.move).toEqual({ x: 0.5, y: 1 });
+    expect(input.move).toEqual({ x: -0.5, y: 1 });
+    expect(input.camera.x).toBeCloseTo(-0.0125);
     expect(input.dodge).toBe(true);
     expect(input.attack).toBe(true);
     expect(input.guard).toBe(true);

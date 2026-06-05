@@ -176,7 +176,7 @@ const poseEnemyRig = (rig: EnemyRig, state: EnemyState, time: number): void => {
 };
 
 export const enemyConfigs = {
-  grunt: { name: 'Grunt', maxHp: 35, speed: 1.6, damage: 18, attackRange: 1.1, aggroRange: 5.5, windup: 0.45, active: 0.22, recovery: 0.45, radius: 0.45, color: 0x7f5541, echoes: 20 },
+  grunt: { name: 'Grunt', maxHp: 35, speed: 1.6, damage: 18, attackRange: 1.1, aggroRange: 4.2, windup: 0.45, active: 0.22, recovery: 0.45, radius: 0.45, color: 0x7f5541, echoes: 20 },
   shield: { name: 'Shield', maxHp: 55, speed: 1.1, damage: 22, attackRange: 1.25, aggroRange: 4.5, windup: 0.65, active: 0.28, recovery: 0.65, radius: 0.55, color: 0x52605b, echoes: 35 },
   fast: { name: 'Fast', maxHp: 26, speed: 2.6, damage: 14, attackRange: 1.0, aggroRange: 6.5, windup: 0.25, active: 0.18, recovery: 0.35, radius: 0.35, color: 0x6d3854, echoes: 25 },
 } satisfies Record<string, EnemyConfig>;

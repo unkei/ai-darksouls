@@ -36,7 +36,7 @@ export class Game {
     const touch = new TouchInput(root);
     this.input = new InputManager([new KeyboardMouseInput(this.scene.renderer.domElement), new GamepadInput(), touch]);
     this.enemies = [
-      new Enemy(enemyConfigs.grunt, { x: -3, y: 0, z: -4 }),
+      new Enemy(enemyConfigs.grunt, { x: -3, y: 0, z: -7 }),
       new Enemy(enemyConfigs.shield, { x: 4, y: 0, z: -10 }),
       new Enemy(enemyConfigs.fast, { x: -5, y: 0, z: -15 }),
       this.boss,
@@ -101,12 +101,18 @@ export class Game {
   private updateCamera(): void {
     const radius = 4.8;
     const target = new THREE.Vector3(this.player.position.x, 0.7, this.player.position.z);
-    const offset = new THREE.Vector3(
+    const behind = new THREE.Vector3(
       Math.sin(this.cameraYaw) * Math.cos(this.cameraPitch) * radius,
-      Math.sin(this.cameraPitch) * radius + 1.3,
+      0,
       Math.cos(this.cameraYaw) * Math.cos(this.cameraPitch) * radius,
     );
-    this.scene.camera.position.set(target.x - offset.x, target.y + offset.y, target.z - offset.z);
+    this.scene.camera.position.copy(target).sub(behind);
+    this.scene.camera.position.y = target.y + Math.sin(this.cameraPitch) * radius + 1.3;
     this.scene.camera.lookAt(target);
+    this.root.dataset.cameraPosition = [
+      this.scene.camera.position.x.toFixed(2),
+      this.scene.camera.position.y.toFixed(2),
+      this.scene.camera.position.z.toFixed(2),
+    ].join(',');
   }
 }

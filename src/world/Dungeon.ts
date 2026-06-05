@@ -22,10 +22,10 @@ const WALL_DATA: Array<[number, number, number, number]> = [
 
 export class Dungeon {
   readonly group = new THREE.Group();
-  readonly checkpoints = [new Bonfire(vec3(0, 0, 0)), new Bonfire(vec3(0, 0, -15))];
+  readonly checkpoints = [new Bonfire(vec3(0, 0, 2.5)), new Bonfire(vec3(0, 0, -15))];
   readonly shortcut = new ShortcutDoor(vec3(-4, 0, -7));
   echoDrop: EchoDrop | null = null;
-  activeCheckpoint: Vec3 = vec3(0, 0, 0);
+  activeCheckpoint: Vec3 = vec3(0, 0, 2.5);
   private readonly bounds: Bounds = { minX: -9, maxX: 9, minZ: -26, maxZ: 4 };
   private readonly walls: WallRect[] = WALL_DATA.map(([x, z, width, depth]) => ({
     minX: x - width / 2,
@@ -96,12 +96,27 @@ export class Dungeon {
   }
 
   private build(): void {
-    const floor = new THREE.Mesh(new THREE.BoxGeometry(18, 0.2, 32), new THREE.MeshStandardMaterial({ color: 0x353532, roughness: 0.96, map: createAtlasTexture('floor', [5, 8]) }));
+    const floor = new THREE.Mesh(
+      new THREE.BoxGeometry(18, 0.2, 32),
+      new THREE.MeshStandardMaterial({
+        color: 0x6a5b47,
+        emissive: 0x211307,
+        emissiveIntensity: 0.16,
+        roughness: 0.94,
+        map: createAtlasTexture('floor', [5, 8]),
+      }),
+    );
     floor.position.set(0, -0.1, -11);
     floor.receiveShadow = true;
     this.group.add(floor);
 
-    const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x5d5a52, roughness: 0.92, map: createAtlasTexture('wall', [2, 4]) });
+    const wallMaterial = new THREE.MeshStandardMaterial({
+      color: 0x726553,
+      emissive: 0x120d08,
+      emissiveIntensity: 0.08,
+      roughness: 0.9,
+      map: createAtlasTexture('wall', [2, 4]),
+    });
     for (const [x, z, width, depth] of WALL_DATA) {
       const wall = new THREE.Mesh(new THREE.BoxGeometry(width, 2.5, depth), wallMaterial);
       wall.position.set(x, 1.25, z);

@@ -8,7 +8,7 @@ import { PLAYER, PlayerState } from './PlayerState';
 export class Player {
   readonly mesh: THREE.Group;
   readonly fsm = new StateMachine<PlayerState>('Idle');
-  position: Vec3 = vec3(0, 0, 0);
+  position: Vec3 = vec3(0, 0, 2.5);
   facing = 0;
   hp = PLAYER.maxHp;
   stamina = PLAYER.maxStamina;
@@ -166,8 +166,21 @@ type PlayerRig = {
 const createPlayerMesh = (): { group: THREE.Group; rig: PlayerRig } => {
   const group = new THREE.Group();
   const armorTexture = createAtlasTexture('armor', [1, 1]);
-  const armor = new THREE.MeshStandardMaterial({ color: 0x87909a, roughness: 0.78, metalness: 0.18, map: armorTexture });
-  const cloth = new THREE.MeshStandardMaterial({ color: 0x6a303b, roughness: 0.92, map: armorTexture });
+  const armor = new THREE.MeshStandardMaterial({
+    color: 0x6f95d6,
+    emissive: 0x14284c,
+    emissiveIntensity: 0.28,
+    roughness: 0.72,
+    metalness: 0.2,
+    map: armorTexture,
+  });
+  const cloth = new THREE.MeshStandardMaterial({
+    color: 0x4567a3,
+    emissive: 0x0d1a36,
+    emissiveIntensity: 0.22,
+    roughness: 0.9,
+    map: armorTexture,
+  });
   const leather = new THREE.MeshStandardMaterial({ color: 0x4d382f, roughness: 0.88, map: armorTexture });
   const skin = new THREE.MeshStandardMaterial({ color: 0xe0c68e, roughness: 0.65 });
   const steel = new THREE.MeshStandardMaterial({ color: 0xaab0ad, roughness: 0.46, metalness: 0.65 });
