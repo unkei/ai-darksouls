@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { clamp, normalize2, Vec3, vec3 } from '../core/Vector';
 import { StateMachine } from '../core/StateMachine';
+import { createAtlasTexture } from '../game/GeneratedTextures';
 import { InputState } from '../input/InputState';
 import { PLAYER, PlayerState } from './PlayerState';
 
@@ -17,9 +18,12 @@ export class Player {
   invulnerable = false;
   private staminaDelay = 0;
   private dodgeDirection = vec3(0, 0, 1);
+  private readonly rig: PlayerRig;
 
   constructor() {
-    this.mesh = createPlayerMesh();
+    const built = createPlayerMesh();
+    this.mesh = built.group;
+    this.rig = built.rig;
     this.syncMesh();
   }
 
@@ -35,12 +39,14 @@ export class Player {
       this.flasks -= 1;
       this.spendStamina(0);
       this.fsm.set('UseItem');
+      this.syncMesh();
       return;
     }
     if (input.attack && this.canAct() && this.stamina >= PLAYER.attackCost) {
       this.spendStamina(PLAYER.attackCost);
       this.pendingAttack = true;
       this.fsm.set('Attack');
+      this.syncMesh();
       return;
     }
     if (input.dodge && this.canAct() && this.stamina >= PLAYER.dodgeCost) {
@@ -49,6 +55,7 @@ export class Player {
       const yaw = cameraYaw + Math.atan2(move.x, move.y || 1);
       this.dodgeDirection = { x: Math.sin(yaw), y: 0, z: Math.cos(yaw) };
       this.fsm.set('Dodge');
+      this.syncMesh();
       return;
     }
     if (input.guard && this.canAct() && this.stamina > 5) {
@@ -86,6 +93,10 @@ export class Player {
     this.hp = PLAYER.maxHp;
     this.stamina = PLAYER.maxStamina;
     this.flasks = PLAYER.maxFlasks;
+  }
+
+  syncVisuals(): void {
+    this.syncMesh();
   }
 
   private resolveActionState(): void {
@@ -140,15 +151,93 @@ export class Player {
   private syncMesh(): void {
     this.mesh.position.set(this.position.x, this.position.y, this.position.z);
     this.mesh.rotation.y = this.facing;
+    posePlayerRig(this.rig, this.fsm.state, this.fsm.timeInState);
   }
 }
 
-const createPlayerMesh = (): THREE.Group => {
+type PlayerRig = {
+  leftArm: THREE.Object3D;
+  rightArm: THREE.Object3D;
+  leftLeg: THREE.Object3D;
+  rightLeg: THREE.Object3D;
+  weapon: THREE.Object3D;
+};
+
+const createPlayerMesh = (): { group: THREE.Group; rig: PlayerRig } => {
   const group = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.35, 0.8, 4, 8), new THREE.MeshStandardMaterial({ color: 0x657184 }));
-  body.position.y = 0.85;
-  const face = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.12, 0.08), new THREE.MeshStandardMaterial({ color: 0xe8d39a }));
-  face.position.set(0, 1.15, 0.34);
-  group.add(body, face);
-  return group;
+  const armorTexture = createAtlasTexture('armor', [1, 1]);
+  const armor = new THREE.MeshStandardMaterial({ color: 0x87909a, roughness: 0.78, metalness: 0.18, map: armorTexture });
+  const cloth = new THREE.MeshStandardMaterial({ color: 0x6a303b, roughness: 0.92, map: armorTexture });
+  const leather = new THREE.MeshStandardMaterial({ color: 0x4d382f, roughness: 0.88, map: armorTexture });
+  const skin = new THREE.MeshStandardMaterial({ color: 0xe0c68e, roughness: 0.65 });
+  const steel = new THREE.MeshStandardMaterial({ color: 0xaab0ad, roughness: 0.46, metalness: 0.65 });
+
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.32, 0.78, 5, 10), armor);
+  body.name = 'player-body';
+  body.position.y = 0.86;
+  const mantle = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.12, 0.38), cloth);
+  mantle.name = 'player-mantle';
+  mantle.position.set(0, 1.22, -0.03);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8), skin);
+  head.name = 'player-head';
+  head.position.y = 1.42;
+  const face = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.09, 0.05), new THREE.MeshStandardMaterial({ color: 0xf1dca6, roughness: 0.55 }));
+  face.name = 'player-face';
+  face.position.set(0, 1.42, 0.18);
+
+  const leftArm = limb('player-left-arm', armor, 0.12, 0.5);
+  leftArm.position.set(-0.42, 1.04, 0);
+  const rightArm = limb('player-right-arm', armor, 0.12, 0.5);
+  rightArm.position.set(0.42, 1.04, 0);
+  const leftLeg = limb('player-left-leg', leather, 0.13, 0.5);
+  leftLeg.position.set(-0.16, 0.35, 0);
+  const rightLeg = limb('player-right-leg', leather, 0.13, 0.5);
+  rightLeg.position.set(0.16, 0.35, 0);
+  const weapon = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.9), steel);
+  weapon.name = 'player-weapon';
+  weapon.position.set(0.08, -0.3, 0.45);
+  weapon.rotation.x = -0.2;
+  rightArm.add(weapon);
+
+  group.add(body, mantle, head, face, leftArm, rightArm, leftLeg, rightLeg);
+  return { group, rig: { leftArm, rightArm, leftLeg, rightLeg, weapon } };
+};
+
+const limb = (name: string, material: THREE.Material, radius: number, length: number): THREE.Mesh => {
+  const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(radius, length, 4, 8), material);
+  mesh.name = name;
+  return mesh;
+};
+
+const posePlayerRig = (rig: PlayerRig, state: PlayerState, time: number): void => {
+  rig.weapon.visible = true;
+  const stride = Math.sin(time * 13) * 0.45;
+  rig.leftArm.rotation.set(0, 0, 0.18);
+  rig.rightArm.rotation.set(0, 0, -0.18);
+  rig.leftLeg.rotation.set(0, 0, 0.05);
+  rig.rightLeg.rotation.set(0, 0, -0.05);
+  rig.weapon.rotation.set(-0.2, 0, 0);
+
+  if (state === 'Walk' || state === 'Run') {
+    rig.leftArm.rotation.x = -stride * 0.5;
+    rig.rightArm.rotation.x = stride * 0.5;
+    rig.leftLeg.rotation.x = stride;
+    rig.rightLeg.rotation.x = -stride;
+  }
+  if (state === 'Guard') {
+    rig.leftArm.rotation.set(-0.7, 0.2, 0.5);
+    rig.rightArm.rotation.set(-0.4, -0.1, -0.28);
+  }
+  if (state === 'Attack') {
+    const swing = Math.min(1, time / 0.16);
+    rig.rightArm.rotation.set(-0.65 - swing * 0.7, -0.18, -0.35);
+    rig.leftArm.rotation.set(-0.25, 0.15, 0.28);
+    rig.weapon.rotation.set(-0.55 - swing * 0.65, 0, 0);
+  }
+  if (state === 'Dodge') {
+    rig.leftArm.rotation.x = 0.8;
+    rig.rightArm.rotation.x = 0.7;
+    rig.leftLeg.rotation.x = -0.7;
+    rig.rightLeg.rotation.x = -0.5;
+  }
 };
