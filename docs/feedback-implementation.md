@@ -5,8 +5,10 @@ This task addresses tester feedback for combat readability, movement facing, col
 ## Development Rules
 
 - Gameplay, input, combat, collision, and rendering behavior changes use TDD: add or update a failing test before implementing the behavior.
+- At task start, sync the task branch with `origin/main` before implementation edits: run `git fetch origin`, merge `origin/main`, resolve conflicts, then run relevant tests.
 - Each PR must include a task checklist in the body.
 - Checklist items are updated as implementation steps complete, not only at merge time.
+- If a fix was delivered in another PR, verify its commit is reachable from the current branch before assuming the behavior is present.
 
 ## Design Decisions
 
