@@ -9,10 +9,10 @@ type Bounds = { minX: number; maxX: number; minZ: number; maxZ: number };
 
 export class Dungeon {
   readonly group = new THREE.Group();
-  readonly checkpoints = [new Bonfire(vec3(0, 0, 0)), new Bonfire(vec3(0, 0, -15))];
+  readonly checkpoints = [new Bonfire(vec3(0, 0, 2.5)), new Bonfire(vec3(0, 0, -15))];
   readonly shortcut = new ShortcutDoor(vec3(-4, 0, -7));
   echoDrop: EchoDrop | null = null;
-  activeCheckpoint: Vec3 = vec3(0, 0, 0);
+  activeCheckpoint: Vec3 = vec3(0, 0, 2.5);
   private readonly bounds: Bounds = { minX: -9, maxX: 9, minZ: -26, maxZ: 4 };
 
   constructor() {

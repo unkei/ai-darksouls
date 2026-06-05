@@ -22,8 +22,8 @@ export class Game {
   private readonly enemies: Array<Enemy | Boss>;
   private readonly boss = new Boss({ x: 0, y: 0, z: -22 });
   private readonly hud: Hud;
-  private cameraYaw = Math.PI;
-  private cameraPitch = 0.42;
+  private cameraYaw = 0;
+  private cameraPitch = 0.52;
   private deathHandled = false;
   private message = 'Explore the keep. Open the shortcut. Defeat the warden.';
 
@@ -34,7 +34,7 @@ export class Game {
     const touch = new TouchInput(root);
     this.input = new InputManager([new KeyboardMouseInput(this.scene.renderer.domElement), new GamepadInput(), touch]);
     this.enemies = [
-      new Enemy(enemyConfigs.grunt, { x: -3, y: 0, z: -4 }),
+      new Enemy(enemyConfigs.grunt, { x: -3, y: 0, z: -7 }),
       new Enemy(enemyConfigs.shield, { x: 4, y: 0, z: -10 }),
       new Enemy(enemyConfigs.fast, { x: -5, y: 0, z: -15 }),
       this.boss,

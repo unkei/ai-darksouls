@@ -6,6 +6,16 @@ test('app starts, renders canvas, and shows HUD', async ({ page }) => {
   await expect(page.getByTestId('game-canvas')).toBeVisible();
   await expect(page.locator('.hud')).toContainText('HP');
   await expect(page.locator('.hud')).toContainText('ST');
+  await expect(page.locator('.hud')).toContainText('WASD move');
+});
+
+test('player starts in a safe readable area', async ({ page }) => {
+  await page.goto('/');
+  const hud = page.locator('.hud');
+
+  await page.waitForTimeout(900);
+
+  await expect(hud).toContainText('HP 100/100');
 });
 
 test('player moves and attack input changes state', async ({ page }) => {

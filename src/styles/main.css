@@ -40,7 +40,8 @@ canvas {
 }
 
 .hud label,
-.readout {
+.readout,
+.controls-help {
   display: flex;
   gap: 10px;
   font-size: 12px;
@@ -82,6 +83,12 @@ canvas {
   flex-wrap: wrap;
   max-width: 580px;
   color: #d8cfbd;
+}
+
+.controls-help {
+  margin-top: 8px;
+  max-width: min(620px, 72vw);
+  color: #c7bda9;
 }
 
 .center-message {
@@ -167,5 +174,9 @@ canvas {
   .readout {
     max-width: 64vw;
     font-size: 11px;
+  }
+
+  .controls-help {
+    display: none;
   }
 }
