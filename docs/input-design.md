@@ -1,0 +1,41 @@
+# Input Design
+
+All devices write to the same `InputState`. Raw device events never drive game logic directly. Providers normalize into action flags, movement axes, and camera axes, then `InputManager` merges them once per frame.
+
+## Keyboard and Mouse
+
+- `WASD`: movement.
+- Mouse move: camera orbit.
+- Left click: attack.
+- Right click: guard and lock-on assist.
+- `Space`: dodge.
+- `E`: interact.
+- `R`: heal.
+- `Shift`: run.
+
+## Gamepad
+
+The Gamepad API is polled by `GamepadInput`.
+
+- Left stick: movement.
+- Right stick: camera.
+- A / Cross: dodge.
+- X / Square: attack.
+- B / Circle: interact.
+- Y / Triangle: heal.
+- LB / L1: guard.
+- RB / R1: lock-on toggle.
+
+The input layer exposes a mockable `GamepadLike` shape for tests.
+
+## Touch
+
+Mobile controls use transparent fixed-position HTML:
+
+- Left virtual stick for movement.
+- Right drag zone for camera.
+- Buttons for attack, dodge, guard, heal, lock-on, and interact.
+
+Touch controls are visible on small/coarse-pointer viewports and hidden on desktop pointer devices.
+
+MVP does not implement remapping, but action names are stable so remapping can be added later.
