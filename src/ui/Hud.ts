@@ -18,6 +18,7 @@ export class Hud {
         <span data-value="echoes"></span>
         <span data-value="position"></span>
       </div>
+      <div class="controls-help">WASD move / Mouse look / Left attack / Space roll / Right guard-lock / E use / R heal</div>
       <div class="boss" hidden>
         <label>Ashen Warden</label><div class="bar bossbar"><span data-bar="boss"></span></div>
       </div>

@@ -7,7 +7,7 @@ import { PLAYER, PlayerState } from './PlayerState';
 export class Player {
   readonly mesh: THREE.Group;
   readonly fsm = new StateMachine<PlayerState>('Idle');
-  position: Vec3 = vec3(0, 0, 0);
+  position: Vec3 = vec3(0, 0, 2.5);
   facing = 0;
   hp = PLAYER.maxHp;
   stamina = PLAYER.maxStamina;
