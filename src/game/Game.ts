@@ -87,12 +87,18 @@ export class Game {
   private updateCamera(): void {
     const radius = 6.5;
     const target = new THREE.Vector3(this.player.position.x, 1.0, this.player.position.z);
-    const offset = new THREE.Vector3(
+    const behind = new THREE.Vector3(
       Math.sin(this.cameraYaw) * Math.cos(this.cameraPitch) * radius,
-      Math.sin(this.cameraPitch) * radius + 1.3,
+      0,
       Math.cos(this.cameraYaw) * Math.cos(this.cameraPitch) * radius,
     );
-    this.scene.camera.position.copy(target).sub(offset);
+    this.scene.camera.position.copy(target).sub(behind);
+    this.scene.camera.position.y = target.y + Math.sin(this.cameraPitch) * radius + 1.3;
     this.scene.camera.lookAt(target);
+    this.root.dataset.cameraPosition = [
+      this.scene.camera.position.x.toFixed(2),
+      this.scene.camera.position.y.toFixed(2),
+      this.scene.camera.position.z.toFixed(2),
+    ].join(',');
   }
 }
