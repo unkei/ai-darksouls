@@ -6,6 +6,8 @@ This repository is developed by Codex agents. Follow these rules for every task:
 - Do not commit directly to `main` or `trunk`.
 - Commit at meaningful step boundaries.
 - Create a Draft PR early.
+- Use TDD for gameplay, input, combat, collision, and rendering behavior changes: write or update a failing test before implementing the behavior.
+- Add a task checklist to the PR body and update checklist items as they are completed.
 - Leave PR comments with test results, review results, findings, and mitigation steps.
 - Convert the PR to Ready For Review after implementation is complete.
 - Run a final review before merge.
