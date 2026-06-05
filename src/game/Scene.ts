@@ -13,13 +13,15 @@ export class GameScene {
     this.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
     this.renderer.shadowMap.enabled = true;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
+    this.renderer.toneMappingExposure = 1.35;
     this.renderer.domElement.dataset.testid = 'game-canvas';
     container.appendChild(this.renderer.domElement);
 
     this.scene.background = new THREE.Color(0x0e1110);
     this.scene.fog = new THREE.FogExp2(0x141715, 0.046);
-    this.scene.add(new THREE.HemisphereLight(0x9aa2a2, 0x211a16, 0.55));
+    this.scene.add(new THREE.HemisphereLight(0xc5ccc7, 0x3a2a22, 0.95));
+    const fill = new THREE.AmbientLight(0x8d8170, 0.42);
+    this.scene.add(fill);
     const moon = new THREE.DirectionalLight(0xb9c2cc, 1.3);
     moon.position.set(-5, 9, 3);
     moon.castShadow = true;

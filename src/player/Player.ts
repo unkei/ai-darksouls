@@ -193,9 +193,9 @@ const createPlayerMesh = (): { group: THREE.Group; rig: PlayerRig } => {
   leftLeg.position.set(-0.16, 0.35, 0);
   const rightLeg = limb('player-right-leg', leather, 0.13, 0.5);
   rightLeg.position.set(0.16, 0.35, 0);
-  const weapon = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.9), steel);
+  const weapon = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.9, 0.08), steel);
   weapon.name = 'player-weapon';
-  weapon.position.set(0.08, -0.3, 0.45);
+  weapon.position.set(0.08, -0.45, 0.16);
   weapon.rotation.x = -0.2;
   rightArm.add(weapon);
 
@@ -210,7 +210,7 @@ const limb = (name: string, material: THREE.Material, radius: number, length: nu
 };
 
 const posePlayerRig = (rig: PlayerRig, state: PlayerState, time: number): void => {
-  rig.weapon.visible = true;
+  rig.weapon.visible = state === 'Attack' || state === 'Guard';
   const stride = Math.sin(time * 13) * 0.45;
   rig.leftArm.rotation.set(0, 0, 0.18);
   rig.rightArm.rotation.set(0, 0, -0.18);

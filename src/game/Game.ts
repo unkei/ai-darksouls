@@ -24,8 +24,8 @@ export class Game {
   private readonly enemies: Array<Enemy | Boss>;
   private readonly boss = new Boss({ x: 0, y: 0, z: -22 });
   private readonly hud: Hud;
-  private cameraYaw = Math.PI;
-  private cameraPitch = 0.42;
+  private cameraYaw = 0;
+  private cameraPitch = 0.22;
   private deathHandled = false;
   private message = 'Explore the keep. Open the shortcut. Defeat the warden.';
 
@@ -61,7 +61,7 @@ export class Game {
   private update(delta: number): void {
     const input = this.input.update();
     this.cameraYaw += input.camera.x;
-    this.cameraPitch = THREE.MathUtils.clamp(this.cameraPitch + input.camera.y, 0.18, 0.9);
+    this.cameraPitch = THREE.MathUtils.clamp(this.cameraPitch + input.camera.y, 0.08, 0.9);
 
     if (this.player.fsm.state === 'Dead') {
       if (!this.deathHandled) {
@@ -99,14 +99,14 @@ export class Game {
   }
 
   private updateCamera(): void {
-    const radius = 6.5;
-    const target = new THREE.Vector3(this.player.position.x, 1.0, this.player.position.z);
+    const radius = 4.8;
+    const target = new THREE.Vector3(this.player.position.x, 0.7, this.player.position.z);
     const offset = new THREE.Vector3(
       Math.sin(this.cameraYaw) * Math.cos(this.cameraPitch) * radius,
       Math.sin(this.cameraPitch) * radius + 1.3,
       Math.cos(this.cameraYaw) * Math.cos(this.cameraPitch) * radius,
     );
-    this.scene.camera.position.copy(target).sub(offset);
+    this.scene.camera.position.set(target.x - offset.x, target.y + offset.y, target.z - offset.z);
     this.scene.camera.lookAt(target);
   }
 }
