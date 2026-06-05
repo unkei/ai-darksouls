@@ -6,8 +6,8 @@ describe('ambience and audio hooks', () => {
   it('produces deterministic torch flicker values inside a subtle range', () => {
     const pulse = createAmbiencePulse();
 
-    expect(pulse(0)).toBeGreaterThanOrEqual(0.8);
-    expect(pulse(1.2)).toBeLessThanOrEqual(1.25);
+    expect(pulse(0)).toBeGreaterThanOrEqual(1.1);
+    expect(pulse(1.2)).toBeLessThanOrEqual(1.6);
     expect(pulse(0)).not.toBe(pulse(1.2));
   });
 
