@@ -28,6 +28,8 @@ Three.js objects are created by scene/world classes, while combat and state tran
 
 Gameplay constants are grouped in module-level data objects rather than scattered through update loops. Third-party assets must be CC0, permissively licensed, generated for this project, or replaced with primitive geometry.
 
+Visual and audio presentation must preserve the project-specific readability specs in [Visual Design](visual-design.md) and [Audio Design](audio-design.md). Rendering and audio layers may expose named nodes, cue methods, or data entries for tests, but gameplay state transitions remain owned by logic classes.
+
 ## Runtime Flow
 
 1. `main.ts` mounts the app and creates `Game`.
