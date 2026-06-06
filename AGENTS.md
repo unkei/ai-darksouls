@@ -15,6 +15,7 @@ This repository is developed by Codex agents. Follow these rules for every task:
 - Convert the PR to Ready For Review after implementation is complete.
 - Run a final review before merge.
 - Merge only when the final review has no blocking issues.
+- After merging a PR into `main` on GitHub, switch the local workspace back to `main`, fetch `origin`, and sync it with `origin/main`.
 - Record specification changes and design decisions in `docs/`.
 - Keep decisions documented so work can continue consistently across sessions.
 - If a task depends on work from another PR, verify that the commit is reachable from the current branch before testing or reporting completion.
@@ -25,4 +26,4 @@ This repository is developed by Codex agents. Follow these rules for every task:
 - When behavior changes, update docs and tests in the same task step.
 - Follow the reusable development process in `docs/development-process.md` and keep project-specific specs separate from reusable guidance.
 
-Current task branch: `codex/dark-souls-mvp`.
+Task branches should use the `codex/` prefix unless the task explicitly requires another branch name.
