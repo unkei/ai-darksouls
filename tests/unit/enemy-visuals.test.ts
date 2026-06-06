@@ -29,4 +29,26 @@ describe('Enemy visuals', () => {
     expect(weapon?.visible).toBe(true);
     expect(weapon?.rotation.x).toBeLessThan(-0.35);
   });
+
+  it('exposes readable telegraph and attack effects', () => {
+    const enemy = new Enemy(enemyConfigs.grunt, { x: 0, y: 0, z: 0 });
+    const player = new Player();
+    player.position = { x: 0, y: 0, z: 0.7 };
+
+    enemy.update(0.016, player);
+
+    expect(enemy.fsm.state).toBe('Windup');
+    expect(enemy.mesh.getObjectByName('enemy-warning-ring')?.visible).toBe(true);
+    expect(enemy.mesh.getObjectByName('enemy-attack-arc')?.visible).toBe(false);
+
+    enemy.update(enemy.config.windup + 0.01, player);
+
+    expect(enemy.fsm.state).toBe('Attack');
+    expect(enemy.mesh.getObjectByName('enemy-warning-ring')?.visible).toBe(false);
+    expect(enemy.mesh.getObjectByName('enemy-attack-arc')?.visible).toBe(true);
+
+    enemy.takeDamage(1);
+
+    expect(enemy.mesh.getObjectByName('enemy-hit-flash')?.visible).toBe(true);
+  });
 });

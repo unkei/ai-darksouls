@@ -80,6 +80,7 @@ export class Enemy {
       return this.config.echoes;
     }
     this.fsm.set('HitStun');
+    this.syncMesh();
     return 0;
   }
 
@@ -106,6 +107,9 @@ type EnemyRig = {
   leftLeg: THREE.Object3D;
   rightLeg: THREE.Object3D;
   weapon: THREE.Object3D;
+  warningRing: THREE.Object3D;
+  attackArc: THREE.Object3D;
+  hitFlash: THREE.Object3D;
 };
 
 const createEnemyMesh = (config: EnemyConfig): { group: THREE.Group; rig: EnemyRig } => {
@@ -138,8 +142,34 @@ const createEnemyMesh = (config: EnemyConfig): { group: THREE.Group; rig: EnemyR
   weapon.position.set(0, -0.25, config.radius * 0.7);
   rightArm.add(weapon);
 
-  group.add(body, head, eye, leftArm, rightArm, leftLeg, rightLeg);
-  return { group, rig: { leftArm, rightArm, leftLeg, rightLeg, weapon } };
+  const warningRing = new THREE.Mesh(
+    new THREE.RingGeometry(config.attackRange * 0.75, config.attackRange, 16),
+    new THREE.MeshBasicMaterial({ color: 0xff6b35, transparent: true, opacity: 0.34, side: THREE.DoubleSide }),
+  );
+  warningRing.name = 'enemy-warning-ring';
+  warningRing.rotation.x = -Math.PI / 2;
+  warningRing.position.y = 0.035;
+  warningRing.visible = false;
+
+  const attackArc = new THREE.Mesh(
+    new THREE.TorusGeometry(config.attackRange * 0.58, 0.045, 6, 18, Math.PI * 1.2),
+    new THREE.MeshBasicMaterial({ color: 0xff2828, transparent: true, opacity: 0.66, side: THREE.DoubleSide }),
+  );
+  attackArc.name = 'enemy-attack-arc';
+  attackArc.position.set(0, 0.72, config.radius * 0.58);
+  attackArc.rotation.set(Math.PI / 2, 0, -0.4);
+  attackArc.visible = false;
+
+  const hitFlash = new THREE.Mesh(
+    new THREE.SphereGeometry(config.radius * 1.05, 8, 6),
+    new THREE.MeshBasicMaterial({ color: 0xffd66b, transparent: true, opacity: 0.4 }),
+  );
+  hitFlash.name = 'enemy-hit-flash';
+  hitFlash.position.y = 0.78;
+  hitFlash.visible = false;
+
+  group.add(body, head, eye, leftArm, rightArm, leftLeg, rightLeg, warningRing, attackArc, hitFlash);
+  return { group, rig: { leftArm, rightArm, leftLeg, rightLeg, weapon, warningRing, attackArc, hitFlash } };
 };
 
 const enemyLimb = (name: string, material: THREE.Material, radius: number, length: number): THREE.Mesh => {
@@ -151,20 +181,28 @@ const enemyLimb = (name: string, material: THREE.Material, radius: number, lengt
 const poseEnemyRig = (rig: EnemyRig, state: EnemyState, time: number): void => {
   const stride = Math.sin(time * 10) * 0.35;
   rig.weapon.visible = state !== 'Dead';
+  rig.warningRing.visible = state === 'Windup';
+  rig.attackArc.visible = state === 'Attack';
+  rig.hitFlash.visible = state === 'HitStun';
   rig.leftArm.rotation.set(0.05, 0, 0.35);
   rig.rightArm.rotation.set(0.05, 0, -0.35);
   rig.leftLeg.rotation.set(stride, 0, 0.03);
   rig.rightLeg.rotation.set(-stride, 0, -0.03);
   rig.weapon.rotation.set(-0.1, 0, 0);
+  rig.warningRing.scale.setScalar(1);
+  rig.attackArc.scale.setScalar(1);
+  rig.hitFlash.scale.setScalar(1);
 
   if (state === 'Windup') {
     rig.rightArm.rotation.set(0.75, -0.25, -0.55);
     rig.weapon.rotation.set(0.55, 0, 0);
+    rig.warningRing.scale.setScalar(0.92 + Math.sin(time * 18) * 0.08);
   }
   if (state === 'Attack') {
     rig.rightArm.rotation.set(-0.95, -0.12, -0.4);
     rig.leftArm.rotation.set(-0.3, 0.18, 0.45);
     rig.weapon.rotation.set(-0.7, 0, 0);
+    rig.attackArc.rotation.z = -0.6 + Math.min(1, time / 0.12) * 1.1;
   }
   if (state === 'Recovery') {
     rig.rightArm.rotation.set(-0.35, 0, -0.35);
@@ -172,6 +210,7 @@ const poseEnemyRig = (rig: EnemyRig, state: EnemyState, time: number): void => {
   if (state === 'HitStun') {
     rig.leftArm.rotation.x = 0.8;
     rig.rightArm.rotation.x = 0.8;
+    rig.hitFlash.scale.setScalar(1 + Math.sin(time * 26) * 0.1);
   }
 };
 
