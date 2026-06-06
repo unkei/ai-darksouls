@@ -13,23 +13,25 @@ export type DungeonUpdateEvent = { restedAtCinderShrine: boolean };
 
 const PLAYER_COLLISION_RADIUS = 0.55;
 const WALL_DATA: Array<[number, number, number, number]> = [
-  [0, -27, 18, 1],
-  [0, 5, 18, 1],
-  [-9, -11, 1, 32],
-  [9, -11, 1, 32],
+  [0, -37, 24, 1],
+  [0, 7, 24, 1],
+  [-12, -15, 1, 44],
+  [12, -15, 1, 44],
   [-3.5, -5, 1, 10],
-  [3.5, -11, 1, 10],
-  [0, -20, 10, 1],
+  [4.5, -12, 1, 12],
+  [0, -24, 12, 1],
+  [-7.5, -27, 1, 10],
 ];
 
 export class Dungeon {
   readonly group = new THREE.Group();
   readonly obstructionMeshes: THREE.Mesh[] = [];
-  readonly checkpoints = [new Bonfire(vec3(0, 0, 2.5)), new Bonfire(vec3(0, 0, -15))];
+  readonly checkpoints = [new Bonfire(vec3(0, 0, 2.5)), new Bonfire(vec3(0, 0, -20))];
   readonly shortcut = new ShortcutDoor(vec3(-4, 0, -7));
   echoDrop: EchoDrop | null = null;
   activeCheckpoint: Vec3 = vec3(0, 0, 2.5);
-  private readonly bounds: Bounds = { minX: -9, maxX: 9, minZ: -26, maxZ: 4 };
+  readonly playableBounds: Bounds = { minX: -12, maxX: 12, minZ: -37, maxZ: 7 };
+  private readonly bounds = this.playableBounds;
   private readonly walls: WallRect[] = WALL_DATA.map(([x, z, width, depth]) => ({
     minX: x - width / 2,
     maxX: x + width / 2,
@@ -39,8 +41,8 @@ export class Dungeon {
   private readonly circleBlockers: CircleBlocker[] = [
     { x: -6, z: -22, radius: 0.58 },
     { x: 6, z: -22, radius: 0.58 },
-    { x: -6, z: -17, radius: 0.58 },
-    { x: 6, z: -17, radius: 0.58 },
+    { x: -6, z: -29, radius: 0.58 },
+    { x: 6, z: -29, radius: 0.58 },
   ];
   private readonly raycaster = new THREE.Raycaster();
 
@@ -118,20 +120,31 @@ export class Dungeon {
     this.group.updateMatrixWorld(true);
     camera.updateMatrixWorld(true);
     const origin = camera.position;
-    const direction = target.clone().sub(origin);
-    const maxDistance = direction.length();
-    if (maxDistance <= 0.001) return;
-    direction.normalize();
-    this.raycaster.set(origin, direction);
-    this.raycaster.far = maxDistance;
-    const obstructing = new Set(this.raycaster.intersectObjects(this.obstructionMeshes, false).map((hit) => hit.object));
+    const obstructing = new Set<THREE.Object3D>();
+    const sampleTargets = [
+      target,
+      target.clone().add(new THREE.Vector3(0.42, 0, 0)),
+      target.clone().add(new THREE.Vector3(-0.42, 0, 0)),
+      target.clone().add(new THREE.Vector3(0, 0.45, 0)),
+      target.clone().add(new THREE.Vector3(0, 0, 0.42)),
+      target.clone().add(new THREE.Vector3(0, 0, -0.42)),
+    ];
+    for (const sampleTarget of sampleTargets) {
+      const direction = sampleTarget.clone().sub(origin);
+      const maxDistance = direction.length();
+      if (maxDistance <= 0.001) continue;
+      direction.normalize();
+      this.raycaster.set(origin, direction);
+      this.raycaster.far = maxDistance;
+      for (const hit of this.raycaster.intersectObjects(this.obstructionMeshes, false)) obstructing.add(hit.object);
+    }
 
     for (const mesh of this.obstructionMeshes) {
       const material = mesh.material;
       if (!(material instanceof THREE.MeshStandardMaterial)) continue;
       const faded = obstructing.has(mesh);
       material.transparent = faded;
-      material.opacity = faded ? 0.32 : 1;
+      material.opacity = faded ? 0.26 : 1;
       material.depthWrite = !faded;
       mesh.renderOrder = faded ? 2 : 0;
     }
@@ -147,7 +160,7 @@ export class Dungeon {
 
   private build(): void {
     const floor = new THREE.Mesh(
-      new THREE.BoxGeometry(18, 0.2, 32),
+      new THREE.BoxGeometry(24, 0.2, 44),
       new THREE.MeshStandardMaterial({
         color: 0x6a5b47,
         emissive: 0x211307,
@@ -156,7 +169,7 @@ export class Dungeon {
         map: createAtlasTexture('floor', [5, 8]),
       }),
     );
-    floor.position.set(0, -0.1, -11);
+    floor.position.set(0, -0.1, -15);
     floor.receiveShadow = true;
     this.group.add(floor);
 
@@ -177,10 +190,11 @@ export class Dungeon {
     }
 
     this.addRuinedCastleExterior(wallMaterial);
+    this.addUpperBailey();
 
     const pillarMaterial = new THREE.MeshStandardMaterial({ color: 0x44413b, roughness: 0.9, map: createAtlasTexture('wall', [1, 2]) });
     for (const x of [-6, 6]) {
-      for (const z of [-22, -17]) {
+      for (const z of [-29, -22]) {
         const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 2.8, 6), pillarMaterial.clone());
         pillar.position.set(x, 1.4, z);
         pillar.castShadow = true;
@@ -190,11 +204,11 @@ export class Dungeon {
       }
     }
     const backdrop = new THREE.Mesh(
-      new THREE.PlaneGeometry(26, 10),
+      new THREE.PlaneGeometry(30, 10),
       new THREE.MeshBasicMaterial({ color: 0x303735, map: createAtlasTexture('backdrop', [1, 1]), transparent: true, opacity: 0.72 }),
     );
     backdrop.name = 'generated-cavern-backdrop';
-    backdrop.position.set(0, 4, -27.55);
+    backdrop.position.set(0, 4, -38.1);
     this.group.add(backdrop);
     for (const checkpoint of this.checkpoints) this.group.add(checkpoint.mesh);
     this.group.add(this.shortcut.mesh);
@@ -211,10 +225,10 @@ export class Dungeon {
     this.group.add(courtyard);
 
     const brokenParapetData: Array<[number, number, number, number, number]> = [
-      [-7.4, -24.8, 1.2, 1.1, 0.2],
-      [-4.8, -25.1, 1.8, 0.85, -0.15],
-      [5.2, -25.0, 1.5, 0.95, 0.16],
-      [7.2, -20.4, 1.1, 1.35, -0.22],
+      [-10.2, -34.4, 1.2, 1.1, 0.2],
+      [-6.8, -34.9, 1.8, 0.85, -0.15],
+      [6.8, -34.7, 1.5, 0.95, 0.16],
+      [10.1, -30.2, 1.1, 1.35, -0.22],
     ];
     for (const [x, z, width, height, tilt] of brokenParapetData) {
       const ruin = new THREE.Mesh(new THREE.BoxGeometry(width, height, 0.38), wallMaterial.clone());
@@ -229,12 +243,12 @@ export class Dungeon {
 
     const weedMaterial = new THREE.MeshStandardMaterial({ color: 0x627a42, emissive: 0x0b1505, emissiveIntensity: 0.16, roughness: 1 });
     const weedPositions: Array<[number, number, number]> = [
-      [-7.1, -23.8, 0.9],
-      [-5.6, -19.4, 0.65],
-      [-2.7, -24.0, 0.8],
-      [3.2, -20.2, 0.7],
-      [6.6, -23.2, 1.0],
-      [7.3, -17.6, 0.6],
+      [-9.2, -33.2, 0.9],
+      [-7.6, -25.4, 0.65],
+      [-2.7, -31.0, 0.8],
+      [3.2, -27.2, 0.7],
+      [8.8, -33.0, 1.0],
+      [9.3, -24.6, 0.6],
     ];
     for (const [x, z, scale] of weedPositions) {
       const weed = new THREE.Group();
@@ -255,8 +269,19 @@ export class Dungeon {
       new THREE.MeshBasicMaterial({ color: 0x6f7f86, transparent: true, opacity: 0.34, depthWrite: false }),
     );
     skyGap.name = 'open-sky-gap';
-    skyGap.position.set(0, 4.2, -22.6);
+    skyGap.position.set(0, 4.2, -31.4);
     skyGap.rotation.x = -0.14;
     this.group.add(skyGap);
+  }
+
+  private addUpperBailey(): void {
+    const floor = new THREE.Mesh(
+      new THREE.BoxGeometry(18, 0.14, 12),
+      new THREE.MeshStandardMaterial({ color: 0x5b5d4e, roughness: 0.96, emissive: 0x0a0f08, emissiveIntensity: 0.08 }),
+    );
+    floor.name = 'upper-bailey-floor';
+    floor.position.set(0, -0.08, -31);
+    floor.receiveShadow = true;
+    this.group.add(floor);
   }
 }

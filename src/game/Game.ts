@@ -24,13 +24,14 @@ export class Game {
   private readonly audio = new AudioDirector();
   private readonly flow = new GameFlow();
   private readonly enemies: Array<Enemy | Boss>;
-  private readonly boss = new Boss({ x: 0, y: 0, z: -22 });
+  private readonly boss = new Boss({ x: 0, y: 0, z: -31 });
   private readonly hud: Hud;
   private cameraYaw = 0;
   private cameraPitch = 0.22;
   private deathHandled = false;
   private message = 'Explore the keep. Open the shortcut. Defeat the warden.';
   private encounterPhase: 'Minor' | 'Boss' = 'Minor';
+  private endingTime = 0;
 
   constructor(private readonly root: HTMLElement) {
     this.root.className = 'game-root';
@@ -39,9 +40,9 @@ export class Game {
     const touch = new TouchInput(root);
     this.input = new InputManager([new KeyboardMouseInput(this.scene.renderer.domElement), new GamepadInput(), touch]);
     this.enemies = [
-      new Enemy(enemyConfigs.grunt, { x: -3, y: 0, z: -7 }),
-      new Enemy(enemyConfigs.shield, { x: 4, y: 0, z: -10 }),
-      new Enemy(enemyConfigs.fast, { x: -5, y: 0, z: -15 }),
+      new Enemy(enemyConfigs.grunt, { x: -4.5, y: 0, z: -8 }),
+      new Enemy(enemyConfigs.shield, { x: 5.2, y: 0, z: -14 }),
+      new Enemy(enemyConfigs.fast, { x: -6.2, y: 0, z: -21 }),
       this.boss,
     ];
     this.scene.scene.add(this.dungeon.group, this.player.mesh, ...this.enemies.map((enemy) => enemy.mesh));
@@ -74,6 +75,7 @@ export class Game {
       playerDead: this.player.fsm.state === 'Dead',
       bossDead: this.boss.fsm.state === 'Dead',
     });
+    if (previousFlowState !== 'Ending' && this.flow.state === 'Ending') this.endingTime = 0;
     if (previousFlowState === 'GameOver' && this.flow.state === 'Playing') {
       this.player.respawn(this.dungeon.activeCheckpoint);
       for (const enemy of this.enemies) enemy.respawn();
@@ -82,7 +84,12 @@ export class Game {
     }
 
     if (this.flow.state === 'Opening' || this.flow.state === 'Ending') {
-      this.updateCamera();
+      if (this.flow.state === 'Ending') {
+        this.endingTime += delta;
+        this.updateEndingCamera(this.endingTime);
+      } else {
+        this.updateCamera();
+      }
       this.hud.update(this.player, this.boss, this.flow.message, this.flow.state);
       this.audio.update(delta);
       this.scene.render(delta);
@@ -108,7 +115,7 @@ export class Game {
         this.message = 'Rested at the cinder shrine. The keep stirs and lesser foes return.';
       }
       this.player.syncVisuals();
-      const nextEncounterPhase = this.player.position.z < -18 ? 'Boss' : 'Minor';
+      const nextEncounterPhase = this.player.position.z < -25 ? 'Boss' : 'Minor';
       if (this.encounterPhase !== nextEncounterPhase) {
         this.encounterPhase = nextEncounterPhase;
         this.message =
@@ -177,7 +184,28 @@ export class Game {
       this.scene.camera.position.z.toFixed(2),
     ].join(',');
   }
+
+  private updateEndingCamera(time: number): void {
+    const rig = createEndingCameraRig(time);
+    this.scene.camera.position.copy(rig.position);
+    this.scene.camera.lookAt(rig.target);
+    this.root.dataset.cameraPosition = [
+      this.scene.camera.position.x.toFixed(2),
+      this.scene.camera.position.y.toFixed(2),
+      this.scene.camera.position.z.toFixed(2),
+    ].join(',');
+  }
 }
+
+export const createEndingCameraRig = (time: number): { position: THREE.Vector3; target: THREE.Vector3 } => {
+  const target = new THREE.Vector3(0, 1.2, -31);
+  const angle = time * 0.22;
+  const radius = 10.5;
+  return {
+    position: new THREE.Vector3(Math.sin(angle) * radius, 6.8 + Math.sin(time * 0.18) * 0.6, -31 + Math.cos(angle) * radius),
+    target,
+  };
+};
 
 const hasPlayerInteraction = (input: ReturnType<InputManager['update']>): boolean =>
   input.attack ||

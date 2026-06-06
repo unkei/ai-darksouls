@@ -79,6 +79,7 @@ const renderCreditsRoll = (message: string): string => {
   const [title = '', ...lines] = message.split('\n');
   return `
     <div class="credits-window">
+      <div class="ending-hold">The End</div>
       <div class="credits-roll">
         <div class="credits-title">${escapeHtml(title)}</div>
         ${lines.map((line) => `<div class="credits-line">${escapeHtml(line)}</div>`).join('')}

@@ -7,7 +7,7 @@ Hollow Keep uses original low-poly dark fantasy visuals:
 - Dark stone ruins.
 - Narrow corridors.
 - A small courtyard.
-- Exposed ruined-castle sections with broken parapets, open sky gaps, and weeds.
+- Exposed ruined-castle sections with broken parapets, open sky gaps, weeds, and a larger upper bailey before the boss.
 - Low fog.
 - Warm cinder shrine lights.
 - A heavy shortcut door.
@@ -90,7 +90,7 @@ The player must be able to identify action state, threat direction, and active d
 
 ## Ending Presentation
 
-The `Ending` overlay uses a staff-roll layout that starts below the viewport and scrolls upward like film credits. Credits remain HTML/CSS so they can be tested without WebGL, and the roll must include `unno`.
+The `Ending` overlay uses a staff-roll layout that starts below the viewport and scrolls upward like film credits. Credits remain HTML/CSS so they can be tested without WebGL, and the roll must include `unno`. After the roll, a visible `The End` hold remains while the camera slowly orbits the cleared boss arena.
 
 ## Copyright Boundary
 
