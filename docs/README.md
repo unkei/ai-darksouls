@@ -13,6 +13,7 @@ This repository keeps reusable development guidance separate from Hollow Keep-sp
 ## Hollow Keep Project Documents
 
 - [Architecture](architecture.md): this project's technology stack, module boundaries, and runtime flow.
+- [Deployment](deployment.md): GitHub Pages deployment workflow and preview policy.
 - [Game Design](game-design.md): Hollow Keep's pillars, MVP scope, player state machine, and combat tuning.
 - [Input Design](input-design.md): input rules for keyboard, mouse, gamepad, and touch.
 - [Visual Design](visual-design.md): art direction and rendering decisions.
