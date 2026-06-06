@@ -11,6 +11,7 @@ import { Player } from '../player/Player';
 import { Dungeon } from '../world/Dungeon';
 import { Hud } from '../ui/Hud';
 import { Loop } from './Loop';
+import { GameFlow } from './GameFlow';
 import { GameScene } from './Scene';
 
 export class Game {
@@ -21,6 +22,7 @@ export class Game {
   private readonly dungeon = new Dungeon();
   private readonly combat = new CombatSystem();
   private readonly audio = new AudioDirector();
+  private readonly flow = new GameFlow();
   private readonly enemies: Array<Enemy | Boss>;
   private readonly boss = new Boss({ x: 0, y: 0, z: -22 });
   private readonly hud: Hud;
@@ -63,30 +65,47 @@ export class Game {
     if (hasPlayerInteraction(input)) this.audio.unlock();
     this.cameraYaw += input.camera.x;
     this.cameraPitch = THREE.MathUtils.clamp(this.cameraPitch + input.camera.y, 0.08, 0.9);
+    const previousFlowState = this.flow.state;
+    this.flow.update({ interact: input.interact, playerDead: this.player.fsm.state === 'Dead', bossDead: this.boss.fsm.state === 'Dead' });
+    if (previousFlowState === 'GameOver' && this.flow.state === 'Playing') {
+      this.player.respawn(this.dungeon.activeCheckpoint);
+      for (const enemy of this.enemies) enemy.respawn();
+      this.deathHandled = false;
+      this.message = 'Echoes remain where you fell.';
+    }
 
-    if (this.player.fsm.state === 'Dead') {
+    if (this.flow.state === 'Opening' || this.flow.state === 'Ending') {
+      this.updateCamera();
+      this.hud.update(this.player, this.boss, this.flow.message, this.flow.state);
+      this.audio.update(delta);
+      this.scene.render(delta);
+      return;
+    }
+
+    if (this.flow.state === 'GameOver') {
       if (!this.deathHandled) {
         this.deathHandled = true;
         this.dungeon.dropEchoes(this.player);
-        this.message = 'You fell. Press Interact to rise at the cinder shrine.';
+        this.message = this.flow.message;
       }
-      if (input.interact) {
-        this.player.respawn(this.dungeon.activeCheckpoint);
-        for (const enemy of this.enemies) enemy.respawn();
-        this.deathHandled = false;
-        this.message = 'Echoes remain where you fell.';
-      }
+    } else if (this.flow.state === 'Clear') {
+      this.message = this.flow.message;
     } else {
       const previousPlayerState: string = this.player.fsm.state;
       this.player.update(delta, input, this.cameraYaw);
       this.dungeon.update(this.player, input.interact);
       this.player.syncVisuals();
       const currentPlayerState: string = this.player.fsm.state;
-      if (previousPlayerState !== 'Attack' && currentPlayerState === 'Attack') this.audio.playAttack();
+      if (previousPlayerState !== 'Attack' && currentPlayerState === 'Attack') {
+        this.audio.playAttack();
+        this.audio.playWeaponWhoosh();
+      }
       if (previousPlayerState !== 'Dodge' && currentPlayerState === 'Dodge') this.audio.playDodge();
       for (const enemy of this.enemies) {
         const previousEnemyState = enemy.fsm.state;
         enemy.update(delta, this.player);
+        this.dungeon.resolveCircleCollision(enemy.position, enemy.config.radius);
+        enemy.syncVisuals();
         if (previousEnemyState !== 'Windup' && enemy.fsm.state === 'Windup') this.audio.playEnemyWindup();
         if (previousEnemyState !== 'Attack' && enemy.fsm.state === 'Attack') {
           if (enemy instanceof Boss) this.audio.playBossAttack(enemy.currentAttackCueId);
@@ -96,16 +115,26 @@ export class Game {
       const beforeHp = this.player.hp;
       const beforeStamina = this.player.stamina;
       const defeatedBefore = this.enemies.filter((enemy) => enemy.fsm.state === 'Dead').length;
+      const enemyHpBefore = this.enemies.map((enemy) => enemy.hp);
       this.combat.update(this.player, this.enemies);
       const defeatedAfter = this.enemies.filter((enemy) => enemy.fsm.state === 'Dead').length;
+      if (this.enemies.some((enemy, index) => enemy.hp < enemyHpBefore[index])) this.audio.playWeaponHit();
       if (this.player.hp < beforeHp) this.audio.playHit();
       else if (currentPlayerState === 'Guard' && this.player.stamina < beforeStamina) this.audio.playBlock();
-      if (defeatedAfter > defeatedBefore) this.audio.playDeath();
-      if (this.boss.fsm.state === 'Dead') this.message = 'The Ashen Warden is defeated.';
+      if (defeatedAfter > defeatedBefore) {
+        this.audio.playDeath();
+        this.audio.playEnemyDefeatRoar();
+      }
+      if (this.boss.fsm.state === 'Dead') {
+        this.flow.update({ interact: false, playerDead: false, bossDead: true });
+        this.message = this.flow.message;
+      }
     }
 
     this.updateCamera();
-    this.hud.update(this.player, this.boss, this.message);
+    const target = new THREE.Vector3(this.player.position.x, 0.7, this.player.position.z);
+    this.dungeon.updateObstructionFading(this.scene.camera, target);
+    this.hud.update(this.player, this.boss, this.message, this.flow.state);
     this.audio.update(delta);
     this.scene.render(delta);
   }

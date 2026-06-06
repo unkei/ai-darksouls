@@ -1,5 +1,6 @@
 import { Player } from '../player/Player';
 import { Boss } from '../enemies/Boss';
+import { GameFlowState } from '../game/GameFlow';
 
 export class Hud {
   readonly root: HTMLElement;
@@ -23,11 +24,12 @@ export class Hud {
         <label>Ashen Warden</label><div class="bar bossbar"><span data-bar="boss"></span></div>
       </div>
       <div class="center-message" data-value="message"></div>
+      <div class="flow-overlay" data-value="flow-overlay" hidden></div>
     `;
     parent.appendChild(this.root);
   }
 
-  update(player: Player, boss: Boss, message: string): void {
+  update(player: Player, boss: Boss, message: string, flowState: GameFlowState = 'Playing'): void {
     setWidth(this.root, 'hp', player.hp);
     setWidth(this.root, 'stamina', player.stamina);
     setWidth(this.root, 'boss', (boss.hp / boss.config.maxHp) * 100);
@@ -38,10 +40,16 @@ export class Hud {
     setText(this.root, 'echoes', `Echoes: ${player.echoes}`);
     setText(this.root, 'position', `Pos: ${player.position.x.toFixed(2)}, ${player.position.z.toFixed(2)}`);
     setText(this.root, 'message', message);
+    const overlay = this.root.querySelector<HTMLElement>('[data-value="flow-overlay"]');
+    if (overlay) {
+      overlay.hidden = flowState === 'Playing';
+      overlay.textContent = flowState === 'Playing' ? '' : message;
+    }
     const bossPanel = this.root.querySelector<HTMLElement>('.boss');
     if (bossPanel) bossPanel.hidden = boss.fsm.state === 'Dead' || boss.fsm.state === 'Idle';
     this.root.dataset.playerState = player.fsm.state;
     this.root.dataset.playerPosition = `${player.position.x.toFixed(2)},${player.position.z.toFixed(2)}`;
+    this.root.dataset.flowState = flowState;
   }
 }
 

@@ -13,6 +13,7 @@ test('app starts, renders canvas, and shows HUD', async ({ page }) => {
 
 test('player starts in a safe readable area', async ({ page }) => {
   await page.goto('/');
+  await page.keyboard.press('KeyE');
   const hud = page.locator('.hud');
 
   await page.waitForTimeout(900);
@@ -28,6 +29,7 @@ test('player starts in a safe readable area', async ({ page }) => {
 
 test('play view is visually readable and captured', async ({ page }, testInfo) => {
   await page.goto('/');
+  await page.keyboard.press('KeyE');
   await page.getByTestId('game-canvas').waitFor({ state: 'visible' });
   await page.waitForTimeout(900);
 
@@ -77,6 +79,7 @@ test('play view is visually readable and captured', async ({ page }, testInfo) =
 
 test('player moves and attack input changes state', async ({ page }) => {
   await page.goto('/');
+  await page.keyboard.press('KeyE');
   const hud = page.locator('.hud');
   const before = await hud.getAttribute('data-player-position');
 

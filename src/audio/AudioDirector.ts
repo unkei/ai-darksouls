@@ -1,6 +1,8 @@
 export class AudioDirector {
   static readonly requiredCueIds = [
     'attack',
+    'weapon-whoosh',
+    'weapon-hit',
     'dodge',
     'block',
     'enemy-windup',
@@ -9,6 +11,7 @@ export class AudioDirector {
     'boss-lunge-attack',
     'hit',
     'death',
+    'enemy-defeat-roar',
     'shrine',
     'ambience',
   ] as const;
@@ -31,6 +34,14 @@ export class AudioDirector {
 
   playAttack(): void {
     this.play('attack');
+  }
+
+  playWeaponWhoosh(): void {
+    this.play('weapon-whoosh');
+  }
+
+  playWeaponHit(): void {
+    this.play('weapon-hit');
   }
 
   playDodge(): void {
@@ -61,6 +72,10 @@ export class AudioDirector {
     this.play('death');
   }
 
+  playEnemyDefeatRoar(): void {
+    this.play('enemy-defeat-roar');
+  }
+
   playShrine(): void {
     this.play('shrine');
   }
@@ -75,7 +90,7 @@ export class AudioDirector {
     const gain = context.createGain();
     oscillator.type = 'sine';
     oscillator.frequency.value = 58;
-    gain.gain.value = 0.04;
+    gain.gain.value = 0.075;
     oscillator.connect(gain);
     gain.connect(context.destination);
     oscillator.start();
@@ -90,7 +105,7 @@ export class AudioDirector {
   update(delta: number): void {
     this.time += delta;
     if (this.ambienceGain) {
-      this.ambienceGain.gain.value = 0.034 + Math.sin(this.time * 1.7) * 0.006;
+      this.ambienceGain.gain.value = 0.065 + Math.sin(this.time * 1.7) * 0.012;
     }
   }
 
@@ -156,12 +171,24 @@ export type BossAudioCueId = 'boss-cleave-attack' | 'boss-lunge-attack';
 const AUDIO_CUES = {
   attack: {
     layers: [
-      { frequency: 170, duration: 0.07, type: 'sawtooth', volume: 0.12 },
-      { frequency: 92, duration: 0.11, type: 'triangle', volume: 0.05 },
+      { frequency: 170, duration: 0.07, type: 'sawtooth', volume: 0.18 },
+      { frequency: 92, duration: 0.11, type: 'triangle', volume: 0.08 },
+    ],
+  },
+  'weapon-whoosh': {
+    layers: [
+      { frequency: 360, duration: 0.09, type: 'triangle', volume: 0.12 },
+      { frequency: 190, duration: 0.13, type: 'sawtooth', volume: 0.08 },
+    ],
+  },
+  'weapon-hit': {
+    layers: [
+      { frequency: 72, duration: 0.1, type: 'square', volume: 0.18 },
+      { frequency: 520, duration: 0.045, type: 'triangle', volume: 0.09 },
     ],
   },
   dodge: {
-    layers: [{ frequency: 240, duration: 0.16, type: 'triangle', volume: 0.07 }],
+    layers: [{ frequency: 240, duration: 0.16, type: 'triangle', volume: 0.12 }],
   },
   block: {
     layers: [
@@ -173,7 +200,7 @@ const AUDIO_CUES = {
     layers: [{ frequency: 280, duration: 0.18, type: 'sawtooth', volume: 0.055 }],
   },
   'enemy-attack': {
-    layers: [{ frequency: 118, duration: 0.12, type: 'sawtooth', volume: 0.105 }],
+    layers: [{ frequency: 118, duration: 0.12, type: 'sawtooth', volume: 0.15 }],
   },
   'boss-cleave-attack': {
     layers: [
@@ -194,7 +221,13 @@ const AUDIO_CUES = {
     ],
   },
   death: {
-    layers: [{ frequency: 55, duration: 0.45, type: 'sine', volume: 0.1 }],
+    layers: [{ frequency: 55, duration: 0.45, type: 'sine', volume: 0.14 }],
+  },
+  'enemy-defeat-roar': {
+    layers: [
+      { frequency: 88, duration: 0.35, type: 'sawtooth', volume: 0.14 },
+      { frequency: 44, duration: 0.55, type: 'triangle', volume: 0.11 },
+    ],
   },
   shrine: {
     layers: [

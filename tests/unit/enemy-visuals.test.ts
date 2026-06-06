@@ -14,6 +14,7 @@ describe('Enemy visuals', () => {
     expect(enemy.mesh.rotation.y).toBeCloseTo(Math.PI / 2, 1);
     expect(enemy.mesh.getObjectByName('enemy-left-arm')).toBeTruthy();
     expect(enemy.mesh.getObjectByName('enemy-right-arm')).toBeTruthy();
+    expect(enemy.mesh.getObjectByName('enemy-head')).toBeTruthy();
     expect(enemy.mesh.getObjectByName('enemy-weapon')).toBeTruthy();
   });
 

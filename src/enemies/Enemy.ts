@@ -92,6 +92,10 @@ export class Enemy {
     this.syncMesh();
   }
 
+  syncVisuals(): void {
+    this.syncMesh();
+  }
+
   protected syncMesh(): void {
     this.mesh.position.set(this.position.x, this.position.y, this.position.z);
     this.mesh.rotation.y = this.facing;
@@ -102,6 +106,8 @@ export class Enemy {
 }
 
 type EnemyRig = {
+  body: THREE.Object3D;
+  head: THREE.Object3D;
   leftArm: THREE.Object3D;
   rightArm: THREE.Object3D;
   leftLeg: THREE.Object3D;
@@ -179,7 +185,7 @@ const createEnemyMesh = (config: EnemyConfig): { group: THREE.Group; rig: EnemyR
   hitFlash.visible = false;
 
   group.add(body, head, eye, leftArm, rightArm, leftLeg, rightLeg, warningRing, attackArc, recoveryCue, hitFlash);
-  return { group, rig: { leftArm, rightArm, leftLeg, rightLeg, weapon, warningRing, attackArc, recoveryCue, hitFlash } };
+  return { group, rig: { body, head, leftArm, rightArm, leftLeg, rightLeg, weapon, warningRing, attackArc, recoveryCue, hitFlash } };
 };
 
 const enemyLimb = (name: string, material: THREE.Material, radius: number, length: number): THREE.Mesh => {
@@ -199,6 +205,8 @@ const poseEnemyRig = (rig: EnemyRig, state: EnemyState, time: number): void => {
   rig.rightArm.rotation.set(0.05, 0, -0.35);
   rig.leftLeg.rotation.set(stride, 0, 0.03);
   rig.rightLeg.rotation.set(-stride, 0, -0.03);
+  rig.body.rotation.set(0, 0, 0);
+  rig.head.rotation.set(0, 0, 0);
   rig.weapon.rotation.set(-0.1, 0, 0);
   rig.warningRing.scale.setScalar(1);
   rig.attackArc.scale.setScalar(1);
@@ -206,23 +214,32 @@ const poseEnemyRig = (rig: EnemyRig, state: EnemyState, time: number): void => {
   rig.hitFlash.scale.setScalar(1);
 
   if (state === 'Windup') {
+    rig.body.rotation.x = -0.12;
+    rig.head.rotation.x = -0.18;
     rig.rightArm.rotation.set(0.75, -0.25, -0.55);
     rig.weapon.rotation.set(0.55, 0, 0);
     rig.warningRing.scale.setScalar(0.92 + Math.sin(time * 18) * 0.08);
   }
   if (state === 'Attack') {
+    rig.body.rotation.x = 0.16;
+    rig.body.rotation.y = -0.22;
+    rig.head.rotation.x = 0.12;
     rig.rightArm.rotation.set(-0.95, -0.12, -0.4);
     rig.leftArm.rotation.set(-0.3, 0.18, 0.45);
     rig.weapon.rotation.set(-0.7, 0, 0);
     rig.attackArc.rotation.z = -0.6 + Math.min(1, time / 0.12) * 1.1;
   }
   if (state === 'Recovery') {
+    rig.body.rotation.x = 0.08;
+    rig.head.rotation.x = -0.08;
     rig.rightArm.rotation.set(0.18, 0.05, -0.28);
     rig.leftArm.rotation.set(0.22, -0.12, 0.34);
     rig.weapon.rotation.set(0.12, 0, 0);
     rig.recoveryCue.scale.set(1, 1, 0.85 + Math.sin(time * 10) * 0.06);
   }
   if (state === 'HitStun') {
+    rig.body.rotation.x = -0.22;
+    rig.head.rotation.x = -0.3;
     rig.leftArm.rotation.x = 0.8;
     rig.rightArm.rotation.x = 0.8;
     rig.hitFlash.scale.setScalar(1 + Math.sin(time * 26) * 0.1);

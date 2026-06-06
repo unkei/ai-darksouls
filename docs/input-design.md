@@ -2,6 +2,8 @@
 
 All devices write to the same `InputState`. Raw device events never drive game logic directly. Providers normalize into action flags, movement axes, and camera axes, then `InputManager` merges them once per frame.
 
+Movement axes use one shared convention across devices: negative `move.x` means left, positive `move.x` means right, positive `move.y` means forward, and negative `move.y` means backward. Device-specific browser/API axis quirks must be fixed inside the provider, not in player movement.
+
 ## Keyboard and Mouse
 
 - `WASD`: movement.

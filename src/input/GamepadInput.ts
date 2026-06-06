@@ -13,7 +13,7 @@ export class GamepadInput implements InputProvider {
     const pad = this.getPads().find((candidate): candidate is GamepadLike => Boolean(candidate));
     if (!pad) return state;
 
-    state.move.x = -deadzone(pad.axes[0] ?? 0);
+    state.move.x = deadzone(pad.axes[0] ?? 0);
     state.move.y = -deadzone(pad.axes[1] ?? 0);
     state.camera.x = -deadzone(pad.axes[2] ?? 0) * 0.05;
     state.camera.y = deadzone(pad.axes[3] ?? 0) * 0.05;
