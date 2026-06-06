@@ -4,6 +4,7 @@ This repository is developed by Codex agents. Follow these rules for every task:
 
 - Create a task branch before changing files.
 - Do not commit directly to `main` or `trunk`.
+- Register every task mentioned in the current conversation and every new task as a GitHub issue before starting implementation, then execute the work by following the corresponding issue.
 - At the start of every task, before implementation edits, run `git fetch origin` and merge `origin/main` into the task branch. Resolve any conflicts and run the relevant tests before continuing.
 - Commit at meaningful step boundaries.
 - Create a Draft PR early.
