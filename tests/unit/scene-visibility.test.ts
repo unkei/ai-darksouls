@@ -22,6 +22,15 @@ describe('Scene visibility', () => {
     expect(texturePathFor('backdrop')).toBe('/assets/textures/hollow-keep-backdrop.png');
   });
 
+  it('adds ruined castle exterior and overgrowth details around the boss approach', () => {
+    const dungeon = new Dungeon();
+
+    expect(dungeon.group.getObjectByName('exposed-courtyard-stone')).toBeTruthy();
+    expect(dungeon.group.getObjectByName('broken-castle-parapet')).toBeTruthy();
+    expect(dungeon.group.getObjectByName('courtyard-weeds')).toBeTruthy();
+    expect(dungeon.group.getObjectByName('open-sky-gap')).toBeTruthy();
+  });
+
   it('fades only dungeon blockers between the camera and player', () => {
     const dungeon = new Dungeon();
     const camera = new THREE.PerspectiveCamera();

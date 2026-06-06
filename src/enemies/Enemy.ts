@@ -110,9 +110,14 @@ type EnemyRig = {
   head: THREE.Object3D;
   leftArm: THREE.Object3D;
   rightArm: THREE.Object3D;
+  leftShoulder: THREE.Object3D;
+  rightShoulder: THREE.Object3D;
   leftLeg: THREE.Object3D;
   rightLeg: THREE.Object3D;
+  leftKnee: THREE.Object3D;
+  rightKnee: THREE.Object3D;
   weapon: THREE.Object3D;
+  weaponGlow: THREE.Object3D;
   warningRing: THREE.Object3D;
   attackArc: THREE.Object3D;
   recoveryCue: THREE.Object3D;
@@ -140,13 +145,34 @@ const createEnemyMesh = (config: EnemyConfig): { group: THREE.Group; rig: EnemyR
   leftArm.position.set(-config.radius * 0.8, 0.9, 0);
   const rightArm = enemyLimb('enemy-right-arm', bone, config.radius * 0.18, 0.5);
   rightArm.position.set(config.radius * 0.8, 0.9, 0);
+  const leftShoulder = new THREE.Mesh(new THREE.BoxGeometry(config.radius * 0.48, 0.14, config.radius * 0.34), hide);
+  leftShoulder.name = 'enemy-left-shoulder';
+  leftShoulder.position.set(-config.radius * 0.52, 1.06, 0);
+  const rightShoulder = new THREE.Mesh(new THREE.BoxGeometry(config.radius * 0.48, 0.14, config.radius * 0.34), hide);
+  rightShoulder.name = 'enemy-right-shoulder';
+  rightShoulder.position.set(config.radius * 0.52, 1.06, 0);
   const leftLeg = enemyLimb('enemy-left-leg', hide, config.radius * 0.2, 0.46);
   leftLeg.position.set(-config.radius * 0.28, 0.32, 0);
   const rightLeg = enemyLimb('enemy-right-leg', hide, config.radius * 0.2, 0.46);
   rightLeg.position.set(config.radius * 0.28, 0.32, 0);
+  const leftKnee = new THREE.Mesh(new THREE.BoxGeometry(config.radius * 0.34, 0.09, config.radius * 0.24), iron);
+  leftKnee.name = 'enemy-left-knee';
+  leftKnee.position.set(0, -0.08, config.radius * 0.18);
+  const rightKnee = new THREE.Mesh(new THREE.BoxGeometry(config.radius * 0.34, 0.09, config.radius * 0.24), iron);
+  rightKnee.name = 'enemy-right-knee';
+  rightKnee.position.set(0, -0.08, config.radius * 0.18);
+  leftLeg.add(leftKnee);
+  rightLeg.add(rightKnee);
   const weapon = new THREE.Mesh(new THREE.BoxGeometry(config.radius * 0.15, config.radius * 0.15, config.radius * 1.6), iron);
   weapon.name = 'enemy-weapon';
   weapon.position.set(0, -0.25, config.radius * 0.7);
+  const weaponGlow = new THREE.Mesh(
+    new THREE.BoxGeometry(config.radius * 0.05, config.radius * 0.05, config.radius * 1.65),
+    new THREE.MeshBasicMaterial({ color: 0xff7048, transparent: true, opacity: 0.48, depthWrite: false }),
+  );
+  weaponGlow.name = 'enemy-weapon-glow';
+  weaponGlow.visible = false;
+  weapon.add(weaponGlow);
   rightArm.add(weapon);
 
   const warningRing = new THREE.Mesh(
@@ -184,8 +210,28 @@ const createEnemyMesh = (config: EnemyConfig): { group: THREE.Group; rig: EnemyR
   hitFlash.position.y = 0.78;
   hitFlash.visible = false;
 
-  group.add(body, head, eye, leftArm, rightArm, leftLeg, rightLeg, warningRing, attackArc, recoveryCue, hitFlash);
-  return { group, rig: { body, head, leftArm, rightArm, leftLeg, rightLeg, weapon, warningRing, attackArc, recoveryCue, hitFlash } };
+  group.add(body, head, eye, leftShoulder, rightShoulder, leftArm, rightArm, leftLeg, rightLeg, warningRing, attackArc, recoveryCue, hitFlash);
+  return {
+    group,
+    rig: {
+      body,
+      head,
+      leftArm,
+      rightArm,
+      leftShoulder,
+      rightShoulder,
+      leftLeg,
+      rightLeg,
+      leftKnee,
+      rightKnee,
+      weapon,
+      weaponGlow,
+      warningRing,
+      attackArc,
+      recoveryCue,
+      hitFlash,
+    },
+  };
 };
 
 const enemyLimb = (name: string, material: THREE.Material, radius: number, length: number): THREE.Mesh => {
@@ -197,14 +243,19 @@ const enemyLimb = (name: string, material: THREE.Material, radius: number, lengt
 const poseEnemyRig = (rig: EnemyRig, state: EnemyState, time: number): void => {
   const stride = Math.sin(time * 10) * 0.35;
   rig.weapon.visible = state !== 'Dead';
+  rig.weaponGlow.visible = state === 'Windup' || state === 'Attack';
   rig.warningRing.visible = state === 'Windup';
   rig.attackArc.visible = state === 'Attack';
   rig.recoveryCue.visible = state === 'Recovery';
   rig.hitFlash.visible = state === 'HitStun';
   rig.leftArm.rotation.set(0.05, 0, 0.35);
   rig.rightArm.rotation.set(0.05, 0, -0.35);
+  rig.leftShoulder.rotation.set(0, 0, 0.08);
+  rig.rightShoulder.rotation.set(0, 0, -0.08);
   rig.leftLeg.rotation.set(stride, 0, 0.03);
   rig.rightLeg.rotation.set(-stride, 0, -0.03);
+  rig.leftKnee.rotation.set(Math.max(0, stride) * 0.2, 0, 0);
+  rig.rightKnee.rotation.set(Math.max(0, -stride) * 0.2, 0, 0);
   rig.body.rotation.set(0, 0, 0);
   rig.head.rotation.set(0, 0, 0);
   rig.weapon.rotation.set(-0.1, 0, 0);
@@ -216,18 +267,22 @@ const poseEnemyRig = (rig: EnemyRig, state: EnemyState, time: number): void => {
   if (state === 'Windup') {
     rig.body.rotation.x = -0.12;
     rig.head.rotation.x = -0.18;
+    rig.rightShoulder.rotation.set(0.42, -0.16, -0.42);
     rig.rightArm.rotation.set(0.75, -0.25, -0.55);
     rig.weapon.rotation.set(0.55, 0, 0);
+    rig.weaponGlow.scale.set(1, 1, 0.92 + Math.sin(time * 16) * 0.08);
     rig.warningRing.scale.setScalar(0.92 + Math.sin(time * 18) * 0.08);
   }
   if (state === 'Attack') {
+    const swing = easeOutCubic(Math.min(1, time / 0.16));
     rig.body.rotation.x = 0.16;
     rig.body.rotation.y = -0.22;
     rig.head.rotation.x = 0.12;
-    rig.rightArm.rotation.set(-0.95, -0.12, -0.4);
+    rig.rightShoulder.rotation.set(-0.42, -0.12, -0.34);
+    rig.rightArm.rotation.set(-0.74 - swing * 0.34, -0.12, -0.4 + swing * 0.16);
     rig.leftArm.rotation.set(-0.3, 0.18, 0.45);
-    rig.weapon.rotation.set(-0.7, 0, 0);
-    rig.attackArc.rotation.z = -0.6 + Math.min(1, time / 0.12) * 1.1;
+    rig.weapon.rotation.set(-0.54 - swing * 0.34, 0, 0);
+    rig.attackArc.rotation.z = -0.6 + swing * 1.1;
   }
   if (state === 'Recovery') {
     rig.body.rotation.x = 0.08;
@@ -245,6 +300,8 @@ const poseEnemyRig = (rig: EnemyRig, state: EnemyState, time: number): void => {
     rig.hitFlash.scale.setScalar(1 + Math.sin(time * 26) * 0.1);
   }
 };
+
+const easeOutCubic = (value: number): number => 1 - Math.pow(1 - value, 3);
 
 export const enemyConfigs = {
   grunt: { name: 'Grunt', maxHp: 35, speed: 1.6, damage: 18, attackRange: 1.1, aggroRange: 4.2, windup: 0.45, active: 0.22, recovery: 0.45, radius: 0.45, color: 0x7f5541, echoes: 20 },

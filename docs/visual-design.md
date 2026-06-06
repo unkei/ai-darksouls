@@ -7,6 +7,7 @@ Hollow Keep uses original low-poly dark fantasy visuals:
 - Dark stone ruins.
 - Narrow corridors.
 - A small courtyard.
+- Exposed ruined-castle sections with broken parapets, open sky gaps, and weeds.
 - Low fog.
 - Warm cinder shrine lights.
 - A heavy shortcut door.
@@ -21,10 +22,12 @@ The style targets PS1/PS2-era silhouettes rather than high-fidelity realism.
 - Active attack hitboxes are implied with brief red flashes.
 - Cinder shrines use warm orange light to draw attention.
 - Boss arena has a darker floor and boundary pillars.
+- The approach to the boss uses outdoor ruin details to separate it from lesser enemy corridors.
 
 Combat readability is a gameplay requirement, not only polish:
 
 - Player `Attack` shows a visible forward arc in addition to weapon motion.
+- Player `Attack` emphasizes a readable ready, raise, and swing sequence using shoulder, arm, weapon, and sword-glow nodes.
 - Player `Guard` shows a translucent shield plane in front of the character.
 - Player `Dodge` shows a trailing cone so the evasive state is visible from the chase camera.
 - Player `HitStun` shows a brief red flash around the body.
@@ -43,6 +46,7 @@ The player must be able to identify action state, threat direction, and active d
 
 - `Idle`, `Walk`, and `Run` must keep facing direction visible from the chase camera.
 - `Attack` must show startup intent, weapon motion, and a forward arc during the strike.
+- The ready and raised poses should be readable before the active swing, without changing the combat timing contract.
 - The player attack startup cue and active attack arc are separate named effects so the state is readable without making startup look like active damage.
 - `Guard` must show a shield or guard plane in front of the player before incoming damage is resolved.
 - `Dodge` must show body compression or trail motion and must remain visually distinct from ordinary movement.
@@ -55,6 +59,7 @@ The player must be able to identify action state, threat direction, and active d
 - Each enemy archetype must have a distinct silhouette feature beyond color alone.
 - `Windup` must present a readable warning before active damage frames. The warning can combine pose, ground ring, glow, weapon lift, or sound, but it must be visible from the default camera.
 - `Attack` must show the active direction and approximate range with a weapon path, arc, or flash.
+- Minor enemies may use shoulder, knee, and weapon-glow nodes to make windup and swing motion read more smoothly without changing combat timings.
 - `Recovery` must visibly relax or lower threat so the player can learn punish timing.
 - `Recovery` uses a named low-threat cue and lowered weapon pose rather than warning rings or active attack arcs.
 - `HitStun` must be distinct from `Windup` and `Attack`.
@@ -82,6 +87,10 @@ The player must be able to identify action state, threat direction, and active d
 - Active damage direction is visible before or during the damage window.
 - State-specific effects use named scene nodes or equivalent testable contracts.
 - Low-poly or authored model upgrades preserve the same gameplay signals.
+
+## Ending Presentation
+
+The `Ending` overlay uses a staff-roll layout that starts below the viewport and scrolls upward like film credits. Credits remain HTML/CSS so they can be tested without WebGL, and the roll must include `unno`.
 
 ## Copyright Boundary
 

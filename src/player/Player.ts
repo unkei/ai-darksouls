@@ -170,11 +170,16 @@ type PlayerRig = {
   head: THREE.Object3D;
   leftArm: THREE.Object3D;
   rightArm: THREE.Object3D;
+  leftShoulder: THREE.Object3D;
+  rightShoulder: THREE.Object3D;
   leftLeg: THREE.Object3D;
   rightLeg: THREE.Object3D;
   leftFoot: THREE.Object3D;
   rightFoot: THREE.Object3D;
+  leftKnee: THREE.Object3D;
+  rightKnee: THREE.Object3D;
   weapon: THREE.Object3D;
+  swordGlow: THREE.Object3D;
   attackStartup: THREE.Object3D;
   attackArc: THREE.Object3D;
   weaponDirection: THREE.Object3D;
@@ -225,10 +230,22 @@ const createPlayerMesh = (): { group: THREE.Group; rig: PlayerRig } => {
   leftArm.position.set(-0.42, 1.04, 0);
   const rightArm = limb('player-right-arm', armor, 0.12, 0.5);
   rightArm.position.set(0.42, 1.04, 0);
+  const leftShoulder = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.16, 0.24), armor);
+  leftShoulder.name = 'player-left-shoulder';
+  leftShoulder.position.set(-0.38, 1.2, 0);
+  const rightShoulder = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.16, 0.24), armor);
+  rightShoulder.name = 'player-right-shoulder';
+  rightShoulder.position.set(0.38, 1.2, 0);
   const leftLeg = limb('player-left-leg', leather, 0.13, 0.5);
   leftLeg.position.set(-0.16, 0.35, 0);
   const rightLeg = limb('player-right-leg', leather, 0.13, 0.5);
   rightLeg.position.set(0.16, 0.35, 0);
+  const leftKnee = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.12, 0.16), armor);
+  leftKnee.name = 'player-left-knee';
+  leftKnee.position.set(0, -0.08, 0.13);
+  const rightKnee = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.12, 0.16), armor);
+  rightKnee.name = 'player-right-knee';
+  rightKnee.position.set(0, -0.08, 0.13);
   const leftFoot = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.1, 0.34), leather);
   leftFoot.name = 'player-left-foot';
   leftFoot.position.set(0, -0.28, 0.08);
@@ -237,10 +254,20 @@ const createPlayerMesh = (): { group: THREE.Group; rig: PlayerRig } => {
   rightFoot.position.set(0, -0.28, 0.08);
   leftLeg.add(leftFoot);
   rightLeg.add(rightFoot);
+  leftLeg.add(leftKnee);
+  rightLeg.add(rightKnee);
   const weapon = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.9, 0.08), steel);
   weapon.name = 'player-weapon';
   weapon.position.set(0.08, -0.45, 0.16);
   weapon.rotation.x = -0.2;
+  const swordGlow = new THREE.Mesh(
+    new THREE.BoxGeometry(0.025, 0.95, 0.025),
+    new THREE.MeshBasicMaterial({ color: 0xffe2a3, transparent: true, opacity: 0.42, depthWrite: false }),
+  );
+  swordGlow.name = 'player-sword-glow';
+  swordGlow.position.set(0, 0, 0.02);
+  swordGlow.visible = false;
+  weapon.add(swordGlow);
   rightArm.add(weapon);
 
   const attackStartup = new THREE.Mesh(
@@ -301,7 +328,24 @@ const createPlayerMesh = (): { group: THREE.Group; rig: PlayerRig } => {
   hitFlash.visible = false;
   hitFlash.renderOrder = 0;
 
-  group.add(body, mantle, head, face, leftArm, rightArm, leftLeg, rightLeg, attackStartup, attackArc, weaponDirection, guardShield, dodgeTrail, hitFlash);
+  group.add(
+    body,
+    mantle,
+    head,
+    face,
+    leftShoulder,
+    rightShoulder,
+    leftArm,
+    rightArm,
+    leftLeg,
+    rightLeg,
+    attackStartup,
+    attackArc,
+    weaponDirection,
+    guardShield,
+    dodgeTrail,
+    hitFlash,
+  );
   return {
     group,
     rig: {
@@ -310,11 +354,16 @@ const createPlayerMesh = (): { group: THREE.Group; rig: PlayerRig } => {
       head,
       leftArm,
       rightArm,
+      leftShoulder,
+      rightShoulder,
       leftLeg,
       rightLeg,
       leftFoot,
       rightFoot,
+      leftKnee,
+      rightKnee,
       weapon,
+      swordGlow,
       attackStartup,
       attackArc,
       weaponDirection,
@@ -333,6 +382,7 @@ const limb = (name: string, material: THREE.Material, radius: number, length: nu
 
 const posePlayerRig = (rig: PlayerRig, state: PlayerState, time: number): void => {
   rig.weapon.visible = state === 'Attack' || state === 'Guard';
+  rig.swordGlow.visible = state === 'Attack';
   const isAttackStartup = state === 'Attack' && time < PLAYER_ATTACK_ACTIVE_START;
   rig.attackStartup.visible = isAttackStartup;
   rig.attackArc.visible = state === 'Attack' && !isAttackStartup;
@@ -345,8 +395,12 @@ const posePlayerRig = (rig: PlayerRig, state: PlayerState, time: number): void =
   rig.rightArm.rotation.set(0, 0, -0.18);
   rig.leftLeg.rotation.set(0, 0, 0.05);
   rig.rightLeg.rotation.set(0, 0, -0.05);
+  rig.leftShoulder.rotation.set(0, 0, 0.04);
+  rig.rightShoulder.rotation.set(0, 0, -0.04);
   rig.leftFoot.rotation.set(0, 0, 0);
   rig.rightFoot.rotation.set(0, 0, 0);
+  rig.leftKnee.rotation.set(0, 0, 0);
+  rig.rightKnee.rotation.set(0, 0, 0);
   rig.body.rotation.set(0, 0, 0);
   rig.mantle.rotation.set(0, 0, 0);
   rig.head.rotation.set(0, 0, 0);
@@ -366,6 +420,8 @@ const posePlayerRig = (rig: PlayerRig, state: PlayerState, time: number): void =
     rig.rightLeg.rotation.x = -stride * pace;
     rig.leftFoot.rotation.x = Math.max(0, -stride) * 0.45;
     rig.rightFoot.rotation.x = Math.max(0, stride) * 0.45;
+    rig.leftKnee.rotation.x = Math.max(0, stride) * 0.25;
+    rig.rightKnee.rotation.x = Math.max(0, -stride) * 0.25;
     rig.body.rotation.x = 0.05 + Math.abs(stride) * 0.04;
     rig.mantle.rotation.x = -Math.abs(stride) * 0.08;
     rig.head.rotation.x = -0.03 + Math.abs(stride) * 0.025;
@@ -375,20 +431,26 @@ const posePlayerRig = (rig: PlayerRig, state: PlayerState, time: number): void =
     rig.head.rotation.x = -0.12;
     rig.leftArm.rotation.set(-0.7, 0.2, 0.5);
     rig.rightArm.rotation.set(-0.4, -0.1, -0.28);
+    rig.leftShoulder.rotation.set(-0.25, 0.12, 0.32);
+    rig.rightShoulder.rotation.set(-0.12, -0.08, -0.22);
     rig.guardShield.scale.setScalar(1 + Math.sin(time * 12) * 0.04);
   }
   if (state === 'Attack') {
     const startup = Math.min(1, time / PLAYER_ATTACK_ACTIVE_START);
-    const swing = Math.min(1, Math.max(0, time - PLAYER_ATTACK_ACTIVE_START) / 0.16);
-    rig.body.rotation.set(-0.08 - swing * 0.12, 0.22 - swing * 0.45, 0);
-    rig.head.rotation.y = -0.12 + swing * 0.2;
-    rig.mantle.rotation.x = 0.08 + swing * 0.08;
-    rig.rightArm.rotation.set(-0.65 - swing * 0.7, -0.18, -0.35);
-    rig.leftArm.rotation.set(-0.25, 0.15, 0.28);
-    rig.weapon.rotation.set(-0.48 - startup * 0.16 - swing * 0.65, 0, 0);
+    const swingLinear = Math.min(1, Math.max(0, time - PLAYER_ATTACK_ACTIVE_START) / 0.16);
+    const swing = easeOutCubic(swingLinear);
+    rig.body.rotation.set(-0.14 - swing * 0.14, 0.34 - swing * 0.68, 0);
+    rig.head.rotation.y = -0.18 + swing * 0.28;
+    rig.mantle.rotation.x = 0.12 + swing * 0.12;
+    rig.rightShoulder.rotation.set(-0.5 - swing * 0.18, -0.18, -0.38);
+    rig.rightArm.rotation.set(-0.78 - swing * 0.9, -0.24, -0.45 + swing * 0.18);
+    rig.leftShoulder.rotation.set(-0.18, 0.16, 0.26);
+    rig.leftArm.rotation.set(-0.28 + swing * 0.1, 0.18, 0.3);
+    rig.weapon.rotation.set(-0.56 - startup * 0.24 - swing * 0.78, 0, 0);
     rig.attackStartup.scale.setScalar(0.88 + startup * 0.22);
     rig.attackArc.rotation.z = 0.15 + swing * 1.1;
     rig.weaponDirection.rotation.z = -0.1 + swing * 0.22;
+    rig.swordGlow.scale.set(1, 1 + swing * 0.24, 1);
   }
   if (state === 'Dodge') {
     rig.body.rotation.x = 0.32;
@@ -406,3 +468,5 @@ const posePlayerRig = (rig: PlayerRig, state: PlayerState, time: number): void =
     rig.hitFlash.scale.setScalar(1 + Math.sin(time * 30) * 0.08);
   }
 };
+
+const easeOutCubic = (value: number): number => 1 - Math.pow(1 - value, 3);

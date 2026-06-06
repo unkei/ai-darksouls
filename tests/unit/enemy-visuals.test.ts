@@ -14,6 +14,10 @@ describe('Enemy visuals', () => {
     expect(enemy.mesh.rotation.y).toBeCloseTo(Math.PI / 2, 1);
     expect(enemy.mesh.getObjectByName('enemy-left-arm')).toBeTruthy();
     expect(enemy.mesh.getObjectByName('enemy-right-arm')).toBeTruthy();
+    expect(enemy.mesh.getObjectByName('enemy-left-shoulder')).toBeTruthy();
+    expect(enemy.mesh.getObjectByName('enemy-right-shoulder')).toBeTruthy();
+    expect(enemy.mesh.getObjectByName('enemy-left-knee')).toBeTruthy();
+    expect(enemy.mesh.getObjectByName('enemy-right-knee')).toBeTruthy();
     expect(enemy.mesh.getObjectByName('enemy-head')).toBeTruthy();
     expect(enemy.mesh.getObjectByName('enemy-weapon')).toBeTruthy();
   });
@@ -27,9 +31,11 @@ describe('Enemy visuals', () => {
     enemy.update(enemy.config.windup + 0.01, player);
 
     const weapon = enemy.mesh.getObjectByName('enemy-weapon');
+    const weaponGlow = enemy.mesh.getObjectByName('enemy-weapon-glow');
     expect(enemy.fsm.state).toBe('Attack');
     expect(weapon?.visible).toBe(true);
     expect(weapon?.rotation.x).toBeLessThan(-0.35);
+    expect(weaponGlow?.visible).toBe(true);
   });
 
   it('exposes readable telegraph and attack effects', () => {

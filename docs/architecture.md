@@ -26,6 +26,8 @@ Rapier or another physics engine is intentionally deferred. The MVP uses simple 
 
 Three.js objects are created by scene/world classes, while combat and state transitions stay in TypeScript logic classes that are unit-testable.
 
+`Dungeon.update` reports world interaction events such as cinder shrine rest. `Game` consumes those events to coordinate cross-system effects, including refilling the player and respawning minor enemies without resetting boss progression.
+
 `GameFlow` owns high-level presentation states (`Opening`, `Playing`, `GameOver`, `Clear`, `Ending`) so retry/clear transitions can be unit-tested without constructing the WebGL renderer.
 
 Gameplay constants are grouped in module-level data objects rather than scattered through update loops. Third-party assets must be CC0, permissively licensed, generated for this project, or replaced with primitive geometry.

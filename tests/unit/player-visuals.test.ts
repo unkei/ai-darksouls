@@ -16,6 +16,10 @@ describe('Player visuals', () => {
     expect(player.mesh.getObjectByName('player-right-arm')).toBeTruthy();
     expect(player.mesh.getObjectByName('player-left-foot')).toBeTruthy();
     expect(player.mesh.getObjectByName('player-right-foot')).toBeTruthy();
+    expect(player.mesh.getObjectByName('player-left-shoulder')).toBeTruthy();
+    expect(player.mesh.getObjectByName('player-right-shoulder')).toBeTruthy();
+    expect(player.mesh.getObjectByName('player-left-knee')).toBeTruthy();
+    expect(player.mesh.getObjectByName('player-right-knee')).toBeTruthy();
     expect(player.mesh.getObjectByName('player-weapon')).toBeTruthy();
   });
 
@@ -28,9 +32,11 @@ describe('Player visuals', () => {
 
     const weapon = player.mesh.getObjectByName('player-weapon');
     const rightArm = player.mesh.getObjectByName('player-right-arm');
+    const swordGlow = player.mesh.getObjectByName('player-sword-glow');
     expect(weapon?.visible).toBe(true);
     expect(weapon?.rotation.x).toBeLessThan(-0.45);
     expect(rightArm?.rotation.x).toBeLessThan(-0.3);
+    expect(swordGlow?.visible).toBe(true);
   });
 
   it('separates attack startup from active arc orientation', () => {
