@@ -1,4 +1,18 @@
 export class AudioDirector {
+  static readonly requiredCueIds = [
+    'attack',
+    'dodge',
+    'block',
+    'enemy-windup',
+    'enemy-attack',
+    'boss-cleave-attack',
+    'boss-lunge-attack',
+    'hit',
+    'death',
+    'shrine',
+    'ambience',
+  ] as const;
+
   readonly events: string[] = [];
   isAmbienceActive = false;
   private context: AudioContext | null = null;
@@ -6,56 +20,49 @@ export class AudioDirector {
   private ambienceGain: GainNode | null = null;
   private time = 0;
 
+  play(cueId: AudioCueId): void {
+    if (cueId === 'ambience') {
+      this.startAmbience();
+      return;
+    }
+    this.events.push(cueId);
+    this.playCue(AUDIO_CUES[cueId].layers);
+  }
+
   playAttack(): void {
-    this.events.push('attack');
-    this.playCue([
-      { frequency: 170, duration: 0.07, type: 'sawtooth', volume: 0.12 },
-      { frequency: 92, duration: 0.11, type: 'triangle', volume: 0.05 },
-    ]);
+    this.play('attack');
   }
 
   playDodge(): void {
-    this.events.push('dodge');
-    this.playCue([{ frequency: 240, duration: 0.16, type: 'triangle', volume: 0.07 }]);
+    this.play('dodge');
   }
 
   playBlock(): void {
-    this.events.push('block');
-    this.playCue([
-      { frequency: 120, duration: 0.08, type: 'square', volume: 0.1 },
-      { frequency: 420, duration: 0.05, type: 'triangle', volume: 0.045 },
-    ]);
+    this.play('block');
   }
 
   playEnemyWindup(): void {
-    this.events.push('enemy-windup');
-    this.playCue([{ frequency: 280, duration: 0.18, type: 'sawtooth', volume: 0.055 }]);
+    this.play('enemy-windup');
   }
 
   playEnemyAttack(): void {
-    this.events.push('enemy-attack');
-    this.playCue([{ frequency: 118, duration: 0.12, type: 'sawtooth', volume: 0.105 }]);
+    this.play('enemy-attack');
+  }
+
+  playBossAttack(cueId: BossAudioCueId): void {
+    this.play(cueId);
   }
 
   playHit(): void {
-    this.events.push('hit');
-    this.playCue([
-      { frequency: 86, duration: 0.13, type: 'square', volume: 0.12 },
-      { frequency: 58, duration: 0.18, type: 'sawtooth', volume: 0.07 },
-    ]);
+    this.play('hit');
   }
 
   playDeath(): void {
-    this.events.push('death');
-    this.playCue([{ frequency: 55, duration: 0.45, type: 'sine', volume: 0.1 }]);
+    this.play('death');
   }
 
   playShrine(): void {
-    this.events.push('shrine');
-    this.playCue([
-      { frequency: 330, duration: 0.22, type: 'sine', volume: 0.06 },
-      { frequency: 495, duration: 0.28, type: 'triangle', volume: 0.035 },
-    ]);
+    this.play('shrine');
   }
 
   startAmbience(): void {
@@ -74,6 +81,10 @@ export class AudioDirector {
     oscillator.start();
     this.ambience = oscillator;
     this.ambienceGain = gain;
+  }
+
+  unlock(): void {
+    void this.getContext()?.resume();
   }
 
   update(delta: number): void {
@@ -118,9 +129,13 @@ export class AudioDirector {
     if (typeof window === 'undefined') return null;
     const AudioCtor = window.AudioContext ?? window.webkitAudioContext;
     if (!AudioCtor) return null;
-    this.context ??= new AudioCtor();
-    if (this.context.state === 'suspended') void this.context.resume();
-    return this.context;
+    try {
+      this.context ??= new AudioCtor();
+      if (this.context.state === 'suspended') void this.context.resume();
+      return this.context;
+    } catch {
+      return null;
+    }
   }
 }
 
@@ -130,6 +145,64 @@ type AudioCueLayer = {
   type: OscillatorType;
   volume: number;
 };
+
+type SynthCue = {
+  layers: AudioCueLayer[];
+};
+
+export type AudioCueId = (typeof AudioDirector.requiredCueIds)[number];
+export type BossAudioCueId = 'boss-cleave-attack' | 'boss-lunge-attack';
+
+const AUDIO_CUES = {
+  attack: {
+    layers: [
+      { frequency: 170, duration: 0.07, type: 'sawtooth', volume: 0.12 },
+      { frequency: 92, duration: 0.11, type: 'triangle', volume: 0.05 },
+    ],
+  },
+  dodge: {
+    layers: [{ frequency: 240, duration: 0.16, type: 'triangle', volume: 0.07 }],
+  },
+  block: {
+    layers: [
+      { frequency: 120, duration: 0.08, type: 'square', volume: 0.1 },
+      { frequency: 420, duration: 0.05, type: 'triangle', volume: 0.045 },
+    ],
+  },
+  'enemy-windup': {
+    layers: [{ frequency: 280, duration: 0.18, type: 'sawtooth', volume: 0.055 }],
+  },
+  'enemy-attack': {
+    layers: [{ frequency: 118, duration: 0.12, type: 'sawtooth', volume: 0.105 }],
+  },
+  'boss-cleave-attack': {
+    layers: [
+      { frequency: 96, duration: 0.16, type: 'sawtooth', volume: 0.13 },
+      { frequency: 144, duration: 0.1, type: 'square', volume: 0.055 },
+    ],
+  },
+  'boss-lunge-attack': {
+    layers: [
+      { frequency: 74, duration: 0.22, type: 'sawtooth', volume: 0.14 },
+      { frequency: 310, duration: 0.08, type: 'triangle', volume: 0.05 },
+    ],
+  },
+  hit: {
+    layers: [
+      { frequency: 86, duration: 0.13, type: 'square', volume: 0.12 },
+      { frequency: 58, duration: 0.18, type: 'sawtooth', volume: 0.07 },
+    ],
+  },
+  death: {
+    layers: [{ frequency: 55, duration: 0.45, type: 'sine', volume: 0.1 }],
+  },
+  shrine: {
+    layers: [
+      { frequency: 330, duration: 0.22, type: 'sine', volume: 0.06 },
+      { frequency: 495, duration: 0.28, type: 'triangle', volume: 0.035 },
+    ],
+  },
+} satisfies Record<Exclude<AudioCueId, 'ambience'>, SynthCue>;
 
 declare global {
   interface Window {

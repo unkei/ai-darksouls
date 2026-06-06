@@ -34,6 +34,11 @@ export class Player {
 
     if (this.fsm.state === 'Dead') return;
     this.resolveActionState();
+    if (this.isLockedInAction()) {
+      this.regenerateStamina(delta);
+      this.syncMesh();
+      return;
+    }
 
     if (input.heal && this.canAct() && this.flasks > 0 && this.hp < PLAYER.maxHp) {
       this.flasks -= 1;
@@ -133,6 +138,10 @@ export class Player {
     return this.fsm.state === 'Idle' || this.fsm.state === 'Walk' || this.fsm.state === 'Run' || this.fsm.state === 'Guard';
   }
 
+  private isLockedInAction(): boolean {
+    return this.fsm.state === 'Attack' || this.fsm.state === 'Dodge' || this.fsm.state === 'HitStun' || this.fsm.state === 'UseItem' || this.fsm.state === 'Interact';
+  }
+
   private spendStamina(amount: number): void {
     this.stamina = clamp(this.stamina - amount, 0, PLAYER.maxStamina);
     this.staminaDelay = PLAYER.staminaRegenDelay;
@@ -161,11 +170,15 @@ type PlayerRig = {
   leftLeg: THREE.Object3D;
   rightLeg: THREE.Object3D;
   weapon: THREE.Object3D;
+  attackStartup: THREE.Object3D;
   attackArc: THREE.Object3D;
+  weaponDirection: THREE.Object3D;
   guardShield: THREE.Object3D;
   dodgeTrail: THREE.Object3D;
   hitFlash: THREE.Object3D;
 };
+
+const PLAYER_ATTACK_ACTIVE_START = 0.12;
 
 const createPlayerMesh = (): { group: THREE.Group; rig: PlayerRig } => {
   const group = new THREE.Group();
@@ -201,6 +214,7 @@ const createPlayerMesh = (): { group: THREE.Group; rig: PlayerRig } => {
   const face = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.09, 0.05), new THREE.MeshStandardMaterial({ color: 0xf1dca6, roughness: 0.55 }));
   face.name = 'player-face';
   face.position.set(0, 1.42, 0.18);
+  face.renderOrder = 3;
 
   const leftArm = limb('player-left-arm', armor, 0.12, 0.5);
   leftArm.position.set(-0.42, 1.04, 0);
@@ -216,42 +230,66 @@ const createPlayerMesh = (): { group: THREE.Group; rig: PlayerRig } => {
   weapon.rotation.x = -0.2;
   rightArm.add(weapon);
 
+  const attackStartup = new THREE.Mesh(
+    new THREE.RingGeometry(0.34, 0.48, 16, 1, -Math.PI * 0.25, Math.PI * 0.7),
+    new THREE.MeshBasicMaterial({ color: 0xffe0a3, transparent: true, opacity: 0.52, side: THREE.DoubleSide, depthWrite: false }),
+  );
+  attackStartup.name = 'player-attack-startup';
+  attackStartup.position.set(0, 0.82, 0.38);
+  attackStartup.rotation.set(Math.PI / 2, 0, -0.62);
+  attackStartup.visible = false;
+  attackStartup.renderOrder = 1;
+
   const attackArc = new THREE.Mesh(
     new THREE.TorusGeometry(0.72, 0.035, 6, 18, Math.PI * 1.15),
-    new THREE.MeshBasicMaterial({ color: 0xffd27a, transparent: true, opacity: 0.72, side: THREE.DoubleSide }),
+    new THREE.MeshBasicMaterial({ color: 0xffd27a, transparent: true, opacity: 0.72, side: THREE.DoubleSide, depthWrite: false }),
   );
   attackArc.name = 'player-attack-arc';
   attackArc.position.set(0, 0.78, 0.35);
   attackArc.rotation.set(Math.PI / 2, 0, -0.25);
   attackArc.visible = false;
+  attackArc.renderOrder = 1;
+
+  const weaponDirection = new THREE.Mesh(
+    new THREE.ConeGeometry(0.12, 0.42, 6),
+    new THREE.MeshBasicMaterial({ color: 0xfff2c2, transparent: true, opacity: 0.62, depthWrite: false }),
+  );
+  weaponDirection.name = 'player-weapon-direction';
+  weaponDirection.position.set(0.32, 0.82, 0.72);
+  weaponDirection.rotation.x = Math.PI / 2;
+  weaponDirection.visible = false;
+  weaponDirection.renderOrder = 1;
 
   const guardShield = new THREE.Mesh(
     new THREE.BoxGeometry(0.62, 0.72, 0.08),
-    new THREE.MeshBasicMaterial({ color: 0x8ec5ff, transparent: true, opacity: 0.36 }),
+    new THREE.MeshBasicMaterial({ color: 0x8ec5ff, transparent: true, opacity: 0.36, depthWrite: false }),
   );
   guardShield.name = 'player-guard-shield';
   guardShield.position.set(0, 0.9, 0.58);
   guardShield.visible = false;
+  guardShield.renderOrder = 1;
 
   const dodgeTrail = new THREE.Mesh(
     new THREE.ConeGeometry(0.38, 1.05, 7),
-    new THREE.MeshBasicMaterial({ color: 0xb6d9ff, transparent: true, opacity: 0.28, side: THREE.DoubleSide }),
+    new THREE.MeshBasicMaterial({ color: 0xb6d9ff, transparent: true, opacity: 0.28, side: THREE.DoubleSide, depthWrite: false }),
   );
   dodgeTrail.name = 'player-dodge-trail';
   dodgeTrail.position.set(0, 0.35, -0.45);
   dodgeTrail.rotation.x = Math.PI / 2;
   dodgeTrail.visible = false;
+  dodgeTrail.renderOrder = 1;
 
   const hitFlash = new THREE.Mesh(
     new THREE.SphereGeometry(0.62, 8, 6),
-    new THREE.MeshBasicMaterial({ color: 0xff4f45, transparent: true, opacity: 0.42 }),
+    new THREE.MeshBasicMaterial({ color: 0xff4f45, transparent: true, opacity: 0.3, depthWrite: false, wireframe: true }),
   );
   hitFlash.name = 'player-hit-flash';
   hitFlash.position.y = 0.86;
   hitFlash.visible = false;
+  hitFlash.renderOrder = 0;
 
-  group.add(body, mantle, head, face, leftArm, rightArm, leftLeg, rightLeg, attackArc, guardShield, dodgeTrail, hitFlash);
-  return { group, rig: { leftArm, rightArm, leftLeg, rightLeg, weapon, attackArc, guardShield, dodgeTrail, hitFlash } };
+  group.add(body, mantle, head, face, leftArm, rightArm, leftLeg, rightLeg, attackStartup, attackArc, weaponDirection, guardShield, dodgeTrail, hitFlash);
+  return { group, rig: { leftArm, rightArm, leftLeg, rightLeg, weapon, attackStartup, attackArc, weaponDirection, guardShield, dodgeTrail, hitFlash } };
 };
 
 const limb = (name: string, material: THREE.Material, radius: number, length: number): THREE.Mesh => {
@@ -262,7 +300,10 @@ const limb = (name: string, material: THREE.Material, radius: number, length: nu
 
 const posePlayerRig = (rig: PlayerRig, state: PlayerState, time: number): void => {
   rig.weapon.visible = state === 'Attack' || state === 'Guard';
-  rig.attackArc.visible = state === 'Attack';
+  const isAttackStartup = state === 'Attack' && time < PLAYER_ATTACK_ACTIVE_START;
+  rig.attackStartup.visible = isAttackStartup;
+  rig.attackArc.visible = state === 'Attack' && !isAttackStartup;
+  rig.weaponDirection.visible = state === 'Attack';
   rig.guardShield.visible = state === 'Guard';
   rig.dodgeTrail.visible = state === 'Dodge';
   rig.hitFlash.visible = state === 'HitStun';
@@ -272,7 +313,9 @@ const posePlayerRig = (rig: PlayerRig, state: PlayerState, time: number): void =
   rig.leftLeg.rotation.set(0, 0, 0.05);
   rig.rightLeg.rotation.set(0, 0, -0.05);
   rig.weapon.rotation.set(-0.2, 0, 0);
+  rig.attackStartup.scale.setScalar(1);
   rig.attackArc.scale.setScalar(1);
+  rig.weaponDirection.scale.setScalar(1);
   rig.guardShield.scale.setScalar(1);
   rig.dodgeTrail.scale.setScalar(1);
   rig.hitFlash.scale.setScalar(1);
@@ -289,11 +332,14 @@ const posePlayerRig = (rig: PlayerRig, state: PlayerState, time: number): void =
     rig.guardShield.scale.setScalar(1 + Math.sin(time * 12) * 0.04);
   }
   if (state === 'Attack') {
-    const swing = Math.min(1, time / 0.16);
+    const startup = Math.min(1, time / PLAYER_ATTACK_ACTIVE_START);
+    const swing = Math.min(1, Math.max(0, time - PLAYER_ATTACK_ACTIVE_START) / 0.16);
     rig.rightArm.rotation.set(-0.65 - swing * 0.7, -0.18, -0.35);
     rig.leftArm.rotation.set(-0.25, 0.15, 0.28);
-    rig.weapon.rotation.set(-0.55 - swing * 0.65, 0, 0);
-    rig.attackArc.rotation.z = -0.45 + swing * 1.25;
+    rig.weapon.rotation.set(-0.48 - startup * 0.16 - swing * 0.65, 0, 0);
+    rig.attackStartup.scale.setScalar(0.88 + startup * 0.22);
+    rig.attackArc.rotation.z = 0.15 + swing * 1.1;
+    rig.weaponDirection.rotation.z = -0.1 + swing * 0.22;
   }
   if (state === 'Dodge') {
     rig.leftArm.rotation.x = 0.8;

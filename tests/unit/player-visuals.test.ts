@@ -63,7 +63,8 @@ describe('Player visuals', () => {
 
     player.update(0.016, attack, 0);
 
-    expect(player.mesh.getObjectByName('player-attack-arc')?.visible).toBe(true);
+    expect(player.mesh.getObjectByName('player-attack-startup')?.visible).toBe(true);
+    expect(player.mesh.getObjectByName('player-attack-arc')?.visible).toBe(false);
     expect(player.mesh.getObjectByName('player-guard-shield')?.visible).toBe(false);
 
     player.respawn({ x: 0, y: 0, z: 0 });
