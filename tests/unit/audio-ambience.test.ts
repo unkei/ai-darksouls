@@ -94,4 +94,10 @@ describe('ambience and audio hooks', () => {
     expect(audio.events).toEqual(['bgm']);
     expect(audio.isBgmActive).toBe(false);
   });
+
+  it('documents that BGM is generated and uses an audible mix profile', () => {
+    expect(AudioDirector.generatedMusic.requiresExternalFile).toBe(false);
+    expect(AudioDirector.generatedMusic.baseGain).toBeGreaterThanOrEqual(0.2);
+    expect(AudioDirector.generatedMusic.layers.length).toBeGreaterThanOrEqual(3);
+  });
 });

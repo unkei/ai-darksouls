@@ -14,9 +14,11 @@ describe('Hud ending presentation', () => {
 
     const overlay = root.querySelector<HTMLElement>('[data-value="flow-overlay"]');
     const credits = root.querySelector<HTMLElement>('.credits-roll');
+    const hold = root.querySelector<HTMLElement>('.ending-hold');
 
     expect(overlay?.dataset.flowState).toBe('Ending');
     expect(credits).toBeTruthy();
     expect(credits?.textContent).toContain('Created by unno');
+    expect(hold?.textContent).toContain('The End');
   });
 });
