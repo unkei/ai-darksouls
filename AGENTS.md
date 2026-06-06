@@ -26,4 +26,4 @@ This repository is developed by Codex agents. Follow these rules for every task:
 - When behavior changes, update docs and tests in the same task step.
 - Follow the reusable development process in `docs/development-process.md` and keep project-specific specs separate from reusable guidance.
 
-Current task branch: `codex/post-merge-main-workspace`.
+Task branches should use the `codex/` prefix unless the task explicitly requires another branch name.
