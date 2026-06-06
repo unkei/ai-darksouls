@@ -100,3 +100,13 @@ test('touch controls appear in mobile viewport', async ({ page, isMobile }) => {
 
   await expect(page.getByTestId('touch-controls')).toBeVisible();
 });
+
+test('mobile viewport disables iOS Safari double-tap zoom', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'mobile-only project assertion');
+  await page.goto('/');
+
+  const viewport = page.locator('meta[name="viewport"]');
+  await expect(viewport).toHaveAttribute('content', /user-scalable=no/);
+  await expect(viewport).toHaveAttribute('content', /maximum-scale=1/);
+  await expect(page.locator('html')).toHaveCSS('touch-action', 'manipulation');
+});
