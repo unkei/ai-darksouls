@@ -38,6 +38,7 @@ Avoid forcing all work into one issue. Prefer smaller issues with clear completi
 7. Convert the PR to Ready For Review only after implementation and verification are complete.
 8. Run a final review before merge.
 9. Merge only when the final review has no blocking issues.
+10. After merging a PR into `main` on GitHub, switch the local workspace back to `main`, fetch `origin`, and sync local `main` with `origin/main`.
 
 ## Documentation Rules
 
