@@ -165,10 +165,15 @@ export class Player {
 }
 
 type PlayerRig = {
+  body: THREE.Object3D;
+  mantle: THREE.Object3D;
+  head: THREE.Object3D;
   leftArm: THREE.Object3D;
   rightArm: THREE.Object3D;
   leftLeg: THREE.Object3D;
   rightLeg: THREE.Object3D;
+  leftFoot: THREE.Object3D;
+  rightFoot: THREE.Object3D;
   weapon: THREE.Object3D;
   attackStartup: THREE.Object3D;
   attackArc: THREE.Object3D;
@@ -224,6 +229,14 @@ const createPlayerMesh = (): { group: THREE.Group; rig: PlayerRig } => {
   leftLeg.position.set(-0.16, 0.35, 0);
   const rightLeg = limb('player-right-leg', leather, 0.13, 0.5);
   rightLeg.position.set(0.16, 0.35, 0);
+  const leftFoot = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.1, 0.34), leather);
+  leftFoot.name = 'player-left-foot';
+  leftFoot.position.set(0, -0.28, 0.08);
+  const rightFoot = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.1, 0.34), leather);
+  rightFoot.name = 'player-right-foot';
+  rightFoot.position.set(0, -0.28, 0.08);
+  leftLeg.add(leftFoot);
+  rightLeg.add(rightFoot);
   const weapon = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.9, 0.08), steel);
   weapon.name = 'player-weapon';
   weapon.position.set(0.08, -0.45, 0.16);
@@ -289,7 +302,27 @@ const createPlayerMesh = (): { group: THREE.Group; rig: PlayerRig } => {
   hitFlash.renderOrder = 0;
 
   group.add(body, mantle, head, face, leftArm, rightArm, leftLeg, rightLeg, attackStartup, attackArc, weaponDirection, guardShield, dodgeTrail, hitFlash);
-  return { group, rig: { leftArm, rightArm, leftLeg, rightLeg, weapon, attackStartup, attackArc, weaponDirection, guardShield, dodgeTrail, hitFlash } };
+  return {
+    group,
+    rig: {
+      body,
+      mantle,
+      head,
+      leftArm,
+      rightArm,
+      leftLeg,
+      rightLeg,
+      leftFoot,
+      rightFoot,
+      weapon,
+      attackStartup,
+      attackArc,
+      weaponDirection,
+      guardShield,
+      dodgeTrail,
+      hitFlash,
+    },
+  };
 };
 
 const limb = (name: string, material: THREE.Material, radius: number, length: number): THREE.Mesh => {
@@ -312,6 +345,11 @@ const posePlayerRig = (rig: PlayerRig, state: PlayerState, time: number): void =
   rig.rightArm.rotation.set(0, 0, -0.18);
   rig.leftLeg.rotation.set(0, 0, 0.05);
   rig.rightLeg.rotation.set(0, 0, -0.05);
+  rig.leftFoot.rotation.set(0, 0, 0);
+  rig.rightFoot.rotation.set(0, 0, 0);
+  rig.body.rotation.set(0, 0, 0);
+  rig.mantle.rotation.set(0, 0, 0);
+  rig.head.rotation.set(0, 0, 0);
   rig.weapon.rotation.set(-0.2, 0, 0);
   rig.attackStartup.scale.setScalar(1);
   rig.attackArc.scale.setScalar(1);
@@ -321,12 +359,20 @@ const posePlayerRig = (rig: PlayerRig, state: PlayerState, time: number): void =
   rig.hitFlash.scale.setScalar(1);
 
   if (state === 'Walk' || state === 'Run') {
+    const pace = state === 'Run' ? 1.25 : 1;
     rig.leftArm.rotation.x = -stride * 0.5;
     rig.rightArm.rotation.x = stride * 0.5;
-    rig.leftLeg.rotation.x = stride;
-    rig.rightLeg.rotation.x = -stride;
+    rig.leftLeg.rotation.x = stride * pace;
+    rig.rightLeg.rotation.x = -stride * pace;
+    rig.leftFoot.rotation.x = Math.max(0, -stride) * 0.45;
+    rig.rightFoot.rotation.x = Math.max(0, stride) * 0.45;
+    rig.body.rotation.x = 0.05 + Math.abs(stride) * 0.04;
+    rig.mantle.rotation.x = -Math.abs(stride) * 0.08;
+    rig.head.rotation.x = -0.03 + Math.abs(stride) * 0.025;
   }
   if (state === 'Guard') {
+    rig.body.rotation.x = -0.08;
+    rig.head.rotation.x = -0.12;
     rig.leftArm.rotation.set(-0.7, 0.2, 0.5);
     rig.rightArm.rotation.set(-0.4, -0.1, -0.28);
     rig.guardShield.scale.setScalar(1 + Math.sin(time * 12) * 0.04);
@@ -334,6 +380,9 @@ const posePlayerRig = (rig: PlayerRig, state: PlayerState, time: number): void =
   if (state === 'Attack') {
     const startup = Math.min(1, time / PLAYER_ATTACK_ACTIVE_START);
     const swing = Math.min(1, Math.max(0, time - PLAYER_ATTACK_ACTIVE_START) / 0.16);
+    rig.body.rotation.set(-0.08 - swing * 0.12, 0.22 - swing * 0.45, 0);
+    rig.head.rotation.y = -0.12 + swing * 0.2;
+    rig.mantle.rotation.x = 0.08 + swing * 0.08;
     rig.rightArm.rotation.set(-0.65 - swing * 0.7, -0.18, -0.35);
     rig.leftArm.rotation.set(-0.25, 0.15, 0.28);
     rig.weapon.rotation.set(-0.48 - startup * 0.16 - swing * 0.65, 0, 0);
@@ -342,6 +391,9 @@ const posePlayerRig = (rig: PlayerRig, state: PlayerState, time: number): void =
     rig.weaponDirection.rotation.z = -0.1 + swing * 0.22;
   }
   if (state === 'Dodge') {
+    rig.body.rotation.x = 0.32;
+    rig.head.rotation.x = 0.22;
+    rig.mantle.rotation.x = -0.38;
     rig.leftArm.rotation.x = 0.8;
     rig.rightArm.rotation.x = 0.7;
     rig.leftLeg.rotation.x = -0.7;
@@ -349,6 +401,8 @@ const posePlayerRig = (rig: PlayerRig, state: PlayerState, time: number): void =
     rig.dodgeTrail.scale.set(1, 1 + Math.min(1, time / 0.12) * 0.5, 1);
   }
   if (state === 'HitStun') {
+    rig.body.rotation.x = -0.18;
+    rig.head.rotation.x = -0.28;
     rig.hitFlash.scale.setScalar(1 + Math.sin(time * 30) * 0.08);
   }
 };

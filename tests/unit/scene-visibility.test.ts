@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import * as THREE from 'three';
 import { createSceneLightingConfig } from '../../src/game/Scene';
 import { texturePathFor } from '../../src/game/GeneratedTextures';
+import { Dungeon } from '../../src/world/Dungeon';
 
 describe('Scene visibility', () => {
   it('keeps the starting view bright enough to read surfaces', () => {
@@ -18,5 +20,22 @@ describe('Scene visibility', () => {
     expect(texturePathFor('floor')).toBe('/assets/textures/hollow-keep-floor.png');
     expect(texturePathFor('armor')).toBe('/assets/textures/hollow-keep-armor.png');
     expect(texturePathFor('backdrop')).toBe('/assets/textures/hollow-keep-backdrop.png');
+  });
+
+  it('fades only dungeon blockers between the camera and player', () => {
+    const dungeon = new Dungeon();
+    const camera = new THREE.PerspectiveCamera();
+    camera.position.set(0, 1.5, -28);
+    const target = new THREE.Vector3(0, 0.7, -22);
+
+    dungeon.updateObstructionFading(camera, target);
+
+    const faded = dungeon.obstructionMeshes.filter((mesh) => {
+      const material = mesh.material;
+      return material instanceof THREE.MeshStandardMaterial && material.opacity < 1;
+    });
+
+    expect(faded.length).toBeGreaterThan(0);
+    expect(faded.length).toBeLessThan(dungeon.obstructionMeshes.length);
   });
 });

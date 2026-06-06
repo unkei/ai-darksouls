@@ -14,6 +14,8 @@ describe('Player visuals', () => {
     expect(player.mesh.rotation.y).toBeCloseTo(player.facing, 3);
     expect(player.mesh.getObjectByName('player-left-arm')).toBeTruthy();
     expect(player.mesh.getObjectByName('player-right-arm')).toBeTruthy();
+    expect(player.mesh.getObjectByName('player-left-foot')).toBeTruthy();
+    expect(player.mesh.getObjectByName('player-right-foot')).toBeTruthy();
     expect(player.mesh.getObjectByName('player-weapon')).toBeTruthy();
   });
 

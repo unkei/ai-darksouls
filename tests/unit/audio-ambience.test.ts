@@ -15,16 +15,31 @@ describe('ambience and audio hooks', () => {
     const audio = new AudioDirector();
 
     audio.playAttack();
+    audio.playWeaponWhoosh();
+    audio.playWeaponHit();
     audio.playDodge();
     audio.playBlock();
     audio.playEnemyWindup();
     audio.playEnemyAttack();
     audio.playHit();
     audio.playShrine();
+    audio.playEnemyDefeatRoar();
     audio.startAmbience();
     audio.update(0.5);
 
-    expect(audio.events).toEqual(['attack', 'dodge', 'block', 'enemy-windup', 'enemy-attack', 'hit', 'shrine', 'ambience']);
+    expect(audio.events).toEqual([
+      'attack',
+      'weapon-whoosh',
+      'weapon-hit',
+      'dodge',
+      'block',
+      'enemy-windup',
+      'enemy-attack',
+      'hit',
+      'shrine',
+      'enemy-defeat-roar',
+      'ambience',
+    ]);
     expect(audio.isAmbienceActive).toBe(true);
     vi.restoreAllMocks();
   });
@@ -34,6 +49,8 @@ describe('ambience and audio hooks', () => {
 
     expect(AudioDirector.requiredCueIds).toEqual([
       'attack',
+      'weapon-whoosh',
+      'weapon-hit',
       'dodge',
       'block',
       'enemy-windup',
@@ -42,6 +59,7 @@ describe('ambience and audio hooks', () => {
       'boss-lunge-attack',
       'hit',
       'death',
+      'enemy-defeat-roar',
       'shrine',
       'ambience',
     ]);

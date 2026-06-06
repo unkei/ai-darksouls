@@ -5,6 +5,8 @@ Audio feedback must make combat state readable without relying on visuals alone.
 ## Required Cues
 
 - `attack`: player attack startup and swing.
+- `weapon-whoosh`: player weapon wind noise during the swing.
+- `weapon-hit`: confirmed weapon impact against an enemy.
 - `dodge`: player evasive movement.
 - `block`: successful guarded impact.
 - `enemy-windup`: enemy attack warning before active frames.
@@ -13,6 +15,7 @@ Audio feedback must make combat state readable without relying on visuals alone.
 - `boss-lunge-attack`: boss longer-range lunge release.
 - `hit`: player damage feedback.
 - `death`: enemy defeat or player death emphasis.
+- `enemy-defeat-roar`: enemy defeat vocal/roar emphasis.
 - `shrine`: checkpoint or shrine interaction.
 - `ambience`: low continuous keep bed.
 
@@ -20,8 +23,8 @@ Audio feedback must make combat state readable without relying on visuals alone.
 
 Combat cues are grouped by gameplay priority:
 
-- Critical: `hit`, `block`, `enemy-windup`, `enemy-attack`, `boss-cleave-attack`, `boss-lunge-attack`, `death`.
-- Action confirmation: `attack`, `dodge`, `shrine`.
+- Critical: `hit`, `block`, `enemy-windup`, `enemy-attack`, `boss-cleave-attack`, `boss-lunge-attack`, `death`, `enemy-defeat-roar`.
+- Action confirmation: `attack`, `weapon-whoosh`, `weapon-hit`, `dodge`, `shrine`.
 - World bed: `ambience`, future area loops, future boss loops.
 
 Critical cues must remain audible over ambience. Action confirmation cues should be short and responsive. World bed cues should support mood without hiding combat timing.
@@ -33,6 +36,7 @@ Critical cues must remain audible over ambience. Action confirmation cues should
 - Enemy attack cues must start when the enemy enters active `Attack` frames.
 - Boss attack cues must use the active boss pattern's named cue ID rather than the generic minor-enemy attack cue.
 - Hit and block cues must play after combat resolution confirms the result.
+- Weapon-hit cues must play only after combat resolution confirms enemy HP changed.
 - Death cues must play once per defeated enemy or player death event.
 - Repeated cues should avoid stacking into distortion during crowded fights.
 

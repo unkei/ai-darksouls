@@ -8,6 +8,7 @@ import { EchoDrop } from './Item';
 
 type Bounds = { minX: number; maxX: number; minZ: number; maxZ: number };
 type WallRect = { minX: number; maxX: number; minZ: number; maxZ: number };
+type CircleBlocker = { x: number; z: number; radius: number };
 
 const PLAYER_COLLISION_RADIUS = 0.55;
 const WALL_DATA: Array<[number, number, number, number]> = [
@@ -22,6 +23,7 @@ const WALL_DATA: Array<[number, number, number, number]> = [
 
 export class Dungeon {
   readonly group = new THREE.Group();
+  readonly obstructionMeshes: THREE.Mesh[] = [];
   readonly checkpoints = [new Bonfire(vec3(0, 0, 2.5)), new Bonfire(vec3(0, 0, -15))];
   readonly shortcut = new ShortcutDoor(vec3(-4, 0, -7));
   echoDrop: EchoDrop | null = null;
@@ -33,13 +35,20 @@ export class Dungeon {
     minZ: z - depth / 2,
     maxZ: z + depth / 2,
   }));
+  private readonly circleBlockers: CircleBlocker[] = [
+    { x: -6, z: -22, radius: 0.58 },
+    { x: 6, z: -22, radius: 0.58 },
+    { x: -6, z: -17, radius: 0.58 },
+    { x: 6, z: -17, radius: 0.58 },
+  ];
+  private readonly raycaster = new THREE.Raycaster();
 
   constructor() {
     this.build();
   }
 
   update(player: Player, interact: boolean): void {
-    this.resolvePlayerCollision(player);
+    this.resolveCircleCollision(player.position, PLAYER_COLLISION_RADIUS);
 
     for (const checkpoint of this.checkpoints) {
       if (distance3(player.position, checkpoint.position) < 1.4) {
@@ -57,34 +66,68 @@ export class Dungeon {
     }
   }
 
-  private resolvePlayerCollision(player: Player): void {
-    player.position.x = clamp(player.position.x, this.bounds.minX + PLAYER_COLLISION_RADIUS, this.bounds.maxX - PLAYER_COLLISION_RADIUS);
-    player.position.z = clamp(player.position.z, this.bounds.minZ + PLAYER_COLLISION_RADIUS, this.bounds.maxZ - PLAYER_COLLISION_RADIUS);
+  resolveCircleCollision(position: Vec3, radius: number): void {
+    position.x = clamp(position.x, this.bounds.minX + radius, this.bounds.maxX - radius);
+    position.z = clamp(position.z, this.bounds.minZ + radius, this.bounds.maxZ - radius);
 
     for (const wall of this.walls) {
       const expanded = {
-        minX: wall.minX - PLAYER_COLLISION_RADIUS,
-        maxX: wall.maxX + PLAYER_COLLISION_RADIUS,
-        minZ: wall.minZ - PLAYER_COLLISION_RADIUS,
-        maxZ: wall.maxZ + PLAYER_COLLISION_RADIUS,
+        minX: wall.minX - radius,
+        maxX: wall.maxX + radius,
+        minZ: wall.minZ - radius,
+        maxZ: wall.maxZ + radius,
       };
-      const insideX = player.position.x > expanded.minX && player.position.x < expanded.maxX;
-      const insideZ = player.position.z > expanded.minZ && player.position.z < expanded.maxZ;
+      const insideX = position.x > expanded.minX && position.x < expanded.maxX;
+      const insideZ = position.z > expanded.minZ && position.z < expanded.maxZ;
       if (!insideX || !insideZ) continue;
 
-      const pushLeft = Math.abs(player.position.x - expanded.minX);
-      const pushRight = Math.abs(expanded.maxX - player.position.x);
-      const pushBack = Math.abs(player.position.z - expanded.minZ);
-      const pushForward = Math.abs(expanded.maxZ - player.position.z);
+      const pushLeft = Math.abs(position.x - expanded.minX);
+      const pushRight = Math.abs(expanded.maxX - position.x);
+      const pushBack = Math.abs(position.z - expanded.minZ);
+      const pushForward = Math.abs(expanded.maxZ - position.z);
       const minPush = Math.min(pushLeft, pushRight, pushBack, pushForward);
-      if (minPush === pushLeft) player.position.x = expanded.minX;
-      else if (minPush === pushRight) player.position.x = expanded.maxX;
-      else if (minPush === pushBack) player.position.z = expanded.minZ;
-      else player.position.z = expanded.maxZ;
+      if (minPush === pushLeft) position.x = expanded.minX;
+      else if (minPush === pushRight) position.x = expanded.maxX;
+      else if (minPush === pushBack) position.z = expanded.minZ;
+      else position.z = expanded.maxZ;
     }
 
-    player.position.x = clamp(player.position.x, this.bounds.minX + PLAYER_COLLISION_RADIUS, this.bounds.maxX - PLAYER_COLLISION_RADIUS);
-    player.position.z = clamp(player.position.z, this.bounds.minZ + PLAYER_COLLISION_RADIUS, this.bounds.maxZ - PLAYER_COLLISION_RADIUS);
+    for (const blocker of this.circleBlockers) {
+      const dx = position.x - blocker.x;
+      const dz = position.z - blocker.z;
+      const distance = Math.hypot(dx, dz);
+      const minDistance = blocker.radius + radius;
+      if (distance >= minDistance) continue;
+      const nx = distance > 0.0001 ? dx / distance : 1;
+      const nz = distance > 0.0001 ? dz / distance : 0;
+      position.x = blocker.x + nx * minDistance;
+      position.z = blocker.z + nz * minDistance;
+    }
+
+    position.x = clamp(position.x, this.bounds.minX + radius, this.bounds.maxX - radius);
+    position.z = clamp(position.z, this.bounds.minZ + radius, this.bounds.maxZ - radius);
+  }
+
+  updateObstructionFading(camera: THREE.Camera, target: THREE.Vector3): void {
+    this.group.updateMatrixWorld(true);
+    camera.updateMatrixWorld(true);
+    const origin = camera.position;
+    const direction = target.clone().sub(origin);
+    const maxDistance = direction.length();
+    if (maxDistance <= 0.001) return;
+    direction.normalize();
+    this.raycaster.set(origin, direction);
+    this.raycaster.far = maxDistance;
+    const obstructing = new Set(this.raycaster.intersectObjects(this.obstructionMeshes, false).map((hit) => hit.object));
+
+    for (const mesh of this.obstructionMeshes) {
+      const material = mesh.material;
+      if (!(material instanceof THREE.MeshStandardMaterial)) continue;
+      const faded = obstructing.has(mesh);
+      material.transparent = faded;
+      material.opacity = faded ? 0.32 : 1;
+      material.depthWrite = !faded;
+    }
   }
 
   dropEchoes(player: Player): void {
@@ -118,21 +161,23 @@ export class Dungeon {
       map: createAtlasTexture('wall', [2, 4]),
     });
     for (const [x, z, width, depth] of WALL_DATA) {
-      const wall = new THREE.Mesh(new THREE.BoxGeometry(width, 2.5, depth), wallMaterial);
+      const wall = new THREE.Mesh(new THREE.BoxGeometry(width, 2.5, depth), wallMaterial.clone());
       wall.position.set(x, 1.25, z);
       wall.castShadow = true;
       wall.receiveShadow = true;
       this.group.add(wall);
+      this.obstructionMeshes.push(wall);
     }
 
     const pillarMaterial = new THREE.MeshStandardMaterial({ color: 0x44413b, roughness: 0.9, map: createAtlasTexture('wall', [1, 2]) });
     for (const x of [-6, 6]) {
       for (const z of [-22, -17]) {
-        const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 2.8, 6), pillarMaterial);
+        const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 2.8, 6), pillarMaterial.clone());
         pillar.position.set(x, 1.4, z);
         pillar.castShadow = true;
         pillar.receiveShadow = true;
         this.group.add(pillar);
+        this.obstructionMeshes.push(pillar);
       }
     }
     const backdrop = new THREE.Mesh(

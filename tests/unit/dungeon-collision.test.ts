@@ -28,4 +28,23 @@ describe('Dungeon collision', () => {
 
     expect(player.position.x).toBeLessThanOrEqual(8.45);
   });
+
+  it('pushes the player out of pillar collision', () => {
+    const dungeon = new Dungeon();
+    const player = new Player();
+    player.position = { x: -6, y: 0, z: -22 };
+
+    dungeon.update(player, false);
+
+    expect(Math.hypot(player.position.x - -6, player.position.z - -22)).toBeGreaterThan(0.9);
+  });
+
+  it('resolves enemy movement against interior walls', () => {
+    const dungeon = new Dungeon();
+    const position = { x: -3.5, y: 0, z: -5 };
+
+    dungeon.resolveCircleCollision(position, 0.45);
+
+    expect(Math.abs(position.x - -3.5)).toBeGreaterThan(0.55);
+  });
 });
