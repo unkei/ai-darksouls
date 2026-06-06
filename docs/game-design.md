@@ -61,6 +61,7 @@ Rules:
 - Player HP: 100.
 - Player stamina: 100, regenerates after a short delay.
 - Healing flask: 3 uses, restores 35 HP, refilled at cinder shrines.
+- Resting at a cinder shrine also revives defeated minor enemies. Boss state is not reset by shrine rest.
 - Attack cost: 22 stamina.
 - Dodge cost: 28 stamina.
 - Guard hold drains stamina while active and reduces incoming damage.
@@ -74,6 +75,8 @@ Enemies use telegraph, active, and recovery windows. Attacks should be readable 
 - `GameOver`: entered on player death. Interact retries from the active cinder shrine.
 - `Clear`: entered when the Ashen Warden is defeated. Interact advances to the ending.
 - `Ending`: staff roll presentation. Credits include `unno`.
+
+Minor enemy routes and the boss encounter should read as separate beats. The HUD labels the current encounter mode, the boss arena approach uses distinct ruined courtyard visuals, and the Ashen Warden remains the only boss-class enemy in the final arena.
 
 ## Collision and Camera Readability
 

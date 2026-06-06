@@ -20,6 +20,7 @@ export class Hud {
         <span data-value="position"></span>
       </div>
       <div class="controls-help">WASD move / Mouse look / Left attack / Space roll / Right guard-lock / E use / R heal</div>
+      <div class="encounter-banner" data-value="encounter">Lesser Foes</div>
       <div class="boss" hidden>
         <label>Ashen Warden</label><div class="bar bossbar"><span data-bar="boss"></span></div>
       </div>
@@ -29,7 +30,7 @@ export class Hud {
     parent.appendChild(this.root);
   }
 
-  update(player: Player, boss: Boss, message: string, flowState: GameFlowState = 'Playing'): void {
+  update(player: Player, boss: Boss, message: string, flowState: GameFlowState = 'Playing', encounterPhase: 'Minor' | 'Boss' = 'Minor'): void {
     setWidth(this.root, 'hp', player.hp);
     setWidth(this.root, 'stamina', player.stamina);
     setWidth(this.root, 'boss', (boss.hp / boss.config.maxHp) * 100);
@@ -40,17 +41,19 @@ export class Hud {
     setText(this.root, 'echoes', `Echoes: ${player.echoes}`);
     setText(this.root, 'position', `Pos: ${player.position.x.toFixed(2)}, ${player.position.z.toFixed(2)}`);
     setText(this.root, 'message', message);
+    setText(this.root, 'encounter', encounterPhase === 'Boss' ? 'Boss: Ashen Warden' : 'Lesser Foes');
     const overlay = this.root.querySelector<HTMLElement>('[data-value="flow-overlay"]');
     if (overlay) {
       overlay.hidden = flowState === 'Playing';
       overlay.dataset.flowState = flowState;
-      overlay.innerHTML = flowState === 'Playing' ? '' : renderFlowOverlay(message);
+      overlay.innerHTML = flowState === 'Playing' ? '' : renderFlowOverlay(message, flowState);
     }
     const bossPanel = this.root.querySelector<HTMLElement>('.boss');
     if (bossPanel) bossPanel.hidden = boss.fsm.state === 'Dead' || boss.fsm.state === 'Idle';
     this.root.dataset.playerState = player.fsm.state;
     this.root.dataset.playerPosition = `${player.position.x.toFixed(2)},${player.position.z.toFixed(2)}`;
     this.root.dataset.flowState = flowState;
+    this.root.dataset.encounterPhase = encounterPhase;
   }
 }
 
@@ -59,7 +62,8 @@ const setWidth = (root: HTMLElement, key: string, value: number): void => {
   if (element) element.style.width = `${Math.max(0, Math.min(100, value))}%`;
 };
 
-const renderFlowOverlay = (message: string): string => {
+const renderFlowOverlay = (message: string, flowState: GameFlowState): string => {
+  if (flowState === 'Ending') return renderCreditsRoll(message);
   const [title = '', subtitle = '', body = '', prompt = ''] = message.split('\n');
   return `
     <div class="flow-panel">
@@ -67,6 +71,18 @@ const renderFlowOverlay = (message: string): string => {
       <div class="flow-title">${escapeHtml(title)}</div>
       <div class="flow-body">${escapeHtml(body)}</div>
       <div class="flow-prompt">${escapeHtml(prompt)}</div>
+    </div>
+  `;
+};
+
+const renderCreditsRoll = (message: string): string => {
+  const [title = '', ...lines] = message.split('\n');
+  return `
+    <div class="credits-window">
+      <div class="credits-roll">
+        <div class="credits-title">${escapeHtml(title)}</div>
+        ${lines.map((line) => `<div class="credits-line">${escapeHtml(line)}</div>`).join('')}
+      </div>
     </div>
   `;
 };

@@ -44,4 +44,6 @@ Mobile controls use transparent fixed-position HTML:
 
 Touch controls are visible on small/coarse-pointer viewports and hidden on desktop pointer devices.
 
+iOS Safari double-tap zoom is disabled for gameplay. The viewport locks maximum scale and root styles use `touch-action: manipulation` while the canvas and touch controls keep direct pointer handling with `touch-action: none`.
+
 MVP does not implement remapping, but action names are stable so remapping can be added later.

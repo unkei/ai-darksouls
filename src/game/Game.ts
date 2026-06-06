@@ -30,6 +30,7 @@ export class Game {
   private cameraPitch = 0.22;
   private deathHandled = false;
   private message = 'Explore the keep. Open the shortcut. Defeat the warden.';
+  private encounterPhase: 'Minor' | 'Boss' = 'Minor';
 
   constructor(private readonly root: HTMLElement) {
     this.root.className = 'game-root';
@@ -99,8 +100,22 @@ export class Game {
     } else {
       const previousPlayerState: string = this.player.fsm.state;
       this.player.update(delta, input, this.cameraYaw);
-      this.dungeon.update(this.player, input.interact);
+      const dungeonEvent = this.dungeon.update(this.player, input.interact);
+      if (dungeonEvent.restedAtCinderShrine) {
+        for (const enemy of this.enemies) {
+          if (!(enemy instanceof Boss)) enemy.respawn();
+        }
+        this.message = 'Rested at the cinder shrine. The keep stirs and lesser foes return.';
+      }
       this.player.syncVisuals();
+      const nextEncounterPhase = this.player.position.z < -18 ? 'Boss' : 'Minor';
+      if (this.encounterPhase !== nextEncounterPhase) {
+        this.encounterPhase = nextEncounterPhase;
+        this.message =
+          nextEncounterPhase === 'Boss'
+            ? 'Boss arena ahead. The Ashen Warden stands apart from the lesser dead.'
+            : 'Lesser patrols haunt the outer keep.';
+      }
       const currentPlayerState: string = this.player.fsm.state;
       if (previousPlayerState !== 'Attack' && currentPlayerState === 'Attack') {
         this.audio.playAttack();
@@ -140,7 +155,7 @@ export class Game {
     this.updateCamera();
     const target = new THREE.Vector3(this.player.position.x, 0.7, this.player.position.z);
     this.dungeon.updateObstructionFading(this.scene.camera, target);
-    this.hud.update(this.player, this.boss, this.message, this.flow.state);
+    this.hud.update(this.player, this.boss, this.message, this.flow.state, this.encounterPhase);
     this.audio.update(delta);
     this.scene.render(delta);
   }

@@ -9,6 +9,7 @@ import { EchoDrop } from './Item';
 type Bounds = { minX: number; maxX: number; minZ: number; maxZ: number };
 type WallRect = { minX: number; maxX: number; minZ: number; maxZ: number };
 type CircleBlocker = { x: number; z: number; radius: number };
+export type DungeonUpdateEvent = { restedAtCinderShrine: boolean };
 
 const PLAYER_COLLISION_RADIUS = 0.55;
 const WALL_DATA: Array<[number, number, number, number]> = [
@@ -47,13 +48,17 @@ export class Dungeon {
     this.build();
   }
 
-  update(player: Player, interact: boolean): void {
+  update(player: Player, interact: boolean): DungeonUpdateEvent {
+    let restedAtCinderShrine = false;
     this.resolveCircleCollision(player.position, PLAYER_COLLISION_RADIUS);
 
     for (const checkpoint of this.checkpoints) {
       if (distance3(player.position, checkpoint.position) < 1.4) {
         this.activeCheckpoint = checkpoint.position;
-        if (interact) player.refill();
+        if (interact) {
+          player.refill();
+          restedAtCinderShrine = true;
+        }
       }
     }
     if (interact && this.shortcut.interact(player.position)) {
@@ -64,6 +69,7 @@ export class Dungeon {
       this.group.remove(this.echoDrop.mesh);
       this.echoDrop = null;
     }
+    return { restedAtCinderShrine };
   }
 
   resolveCircleCollision(position: Vec3, radius: number): void {
@@ -170,6 +176,8 @@ export class Dungeon {
       this.obstructionMeshes.push(wall);
     }
 
+    this.addRuinedCastleExterior(wallMaterial);
+
     const pillarMaterial = new THREE.MeshStandardMaterial({ color: 0x44413b, roughness: 0.9, map: createAtlasTexture('wall', [1, 2]) });
     for (const x of [-6, 6]) {
       for (const z of [-22, -17]) {
@@ -190,5 +198,65 @@ export class Dungeon {
     this.group.add(backdrop);
     for (const checkpoint of this.checkpoints) this.group.add(checkpoint.mesh);
     this.group.add(this.shortcut.mesh);
+  }
+
+  private addRuinedCastleExterior(wallMaterial: THREE.MeshStandardMaterial): void {
+    const courtyard = new THREE.Mesh(
+      new THREE.BoxGeometry(13, 0.12, 8),
+      new THREE.MeshStandardMaterial({ color: 0x4f5a43, roughness: 0.98, emissive: 0x081008, emissiveIntensity: 0.08 }),
+    );
+    courtyard.name = 'exposed-courtyard-stone';
+    courtyard.position.set(0, -0.16, -22.5);
+    courtyard.receiveShadow = true;
+    this.group.add(courtyard);
+
+    const brokenParapetData: Array<[number, number, number, number, number]> = [
+      [-7.4, -24.8, 1.2, 1.1, 0.2],
+      [-4.8, -25.1, 1.8, 0.85, -0.15],
+      [5.2, -25.0, 1.5, 0.95, 0.16],
+      [7.2, -20.4, 1.1, 1.35, -0.22],
+    ];
+    for (const [x, z, width, height, tilt] of brokenParapetData) {
+      const ruin = new THREE.Mesh(new THREE.BoxGeometry(width, height, 0.38), wallMaterial.clone());
+      ruin.name = 'broken-castle-parapet';
+      ruin.position.set(x, height / 2 - 0.02, z);
+      ruin.rotation.z = tilt;
+      ruin.castShadow = true;
+      ruin.receiveShadow = true;
+      this.group.add(ruin);
+      this.obstructionMeshes.push(ruin);
+    }
+
+    const weedMaterial = new THREE.MeshStandardMaterial({ color: 0x627a42, emissive: 0x0b1505, emissiveIntensity: 0.16, roughness: 1 });
+    const weedPositions: Array<[number, number, number]> = [
+      [-7.1, -23.8, 0.9],
+      [-5.6, -19.4, 0.65],
+      [-2.7, -24.0, 0.8],
+      [3.2, -20.2, 0.7],
+      [6.6, -23.2, 1.0],
+      [7.3, -17.6, 0.6],
+    ];
+    for (const [x, z, scale] of weedPositions) {
+      const weed = new THREE.Group();
+      weed.name = 'courtyard-weeds';
+      for (let blade = 0; blade < 5; blade += 1) {
+        const mesh = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.5 + blade * 0.04, 4), weedMaterial);
+        mesh.position.set((blade - 2) * 0.08, 0.18, Math.sin(blade) * 0.05);
+        mesh.rotation.set(0.18 + blade * 0.04, blade * 0.9, (blade - 2) * 0.12);
+        weed.add(mesh);
+      }
+      weed.position.set(x, 0.02, z);
+      weed.scale.setScalar(scale);
+      this.group.add(weed);
+    }
+
+    const skyGap = new THREE.Mesh(
+      new THREE.PlaneGeometry(10, 6),
+      new THREE.MeshBasicMaterial({ color: 0x6f7f86, transparent: true, opacity: 0.34, depthWrite: false }),
+    );
+    skyGap.name = 'open-sky-gap';
+    skyGap.position.set(0, 4.2, -22.6);
+    skyGap.rotation.x = -0.14;
+    this.group.add(skyGap);
   }
 }
