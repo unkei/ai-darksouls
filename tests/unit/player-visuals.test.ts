@@ -31,6 +31,31 @@ describe('Player visuals', () => {
     expect(rightArm?.rotation.x).toBeLessThan(-0.3);
   });
 
+  it('separates attack startup from active arc orientation', () => {
+    const player = new Player();
+    const input = createInputState();
+    input.attack = true;
+
+    player.update(0.016, input, 0);
+
+    const startup = player.mesh.getObjectByName('player-attack-startup');
+    const activeArc = player.mesh.getObjectByName('player-attack-arc');
+    const direction = player.mesh.getObjectByName('player-weapon-direction');
+    const facingMarker = player.mesh.getObjectByName('player-face');
+
+    expect(startup?.visible).toBe(true);
+    expect(activeArc?.visible).toBe(false);
+    expect(direction?.visible).toBe(true);
+    expect(direction?.position.z).toBeGreaterThan(0.55);
+    expect(facingMarker?.visible).toBe(true);
+
+    player.update(0.14, createInputState(), 0);
+
+    expect(startup?.visible).toBe(false);
+    expect(activeArc?.visible).toBe(true);
+    expect(activeArc?.rotation.z).toBeGreaterThan(0.1);
+  });
+
   it('exposes readable state effects for combat actions', () => {
     const player = new Player();
     const attack = createInputState();
@@ -38,7 +63,8 @@ describe('Player visuals', () => {
 
     player.update(0.016, attack, 0);
 
-    expect(player.mesh.getObjectByName('player-attack-arc')?.visible).toBe(true);
+    expect(player.mesh.getObjectByName('player-attack-startup')?.visible).toBe(true);
+    expect(player.mesh.getObjectByName('player-attack-arc')?.visible).toBe(false);
     expect(player.mesh.getObjectByName('player-guard-shield')?.visible).toBe(false);
 
     player.respawn({ x: 0, y: 0, z: 0 });
@@ -59,5 +85,26 @@ describe('Player visuals', () => {
     player.syncVisuals();
 
     expect(player.mesh.getObjectByName('player-hit-flash')?.visible).toBe(true);
+  });
+
+  it('hides state-only effects after their action ends', () => {
+    const player = new Player();
+    const dodge = createInputState();
+    dodge.dodge = true;
+
+    player.update(0.016, dodge, 0);
+    expect(player.mesh.getObjectByName('player-dodge-trail')?.visible).toBe(true);
+
+    player.update(0.5, createInputState(), 0);
+
+    expect(player.mesh.getObjectByName('player-dodge-trail')?.visible).toBe(false);
+
+    player.takeDamage(10, false);
+    player.syncVisuals();
+    expect(player.mesh.getObjectByName('player-hit-flash')?.visible).toBe(true);
+
+    player.update(0.5, createInputState(), 0);
+
+    expect(player.mesh.getObjectByName('player-hit-flash')?.visible).toBe(false);
   });
 });

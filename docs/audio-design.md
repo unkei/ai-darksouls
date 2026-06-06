@@ -9,6 +9,8 @@ Audio feedback must make combat state readable without relying on visuals alone.
 - `block`: successful guarded impact.
 - `enemy-windup`: enemy attack warning before active frames.
 - `enemy-attack`: enemy active attack release.
+- `boss-cleave-attack`: boss short-range cleave release.
+- `boss-lunge-attack`: boss longer-range lunge release.
 - `hit`: player damage feedback.
 - `death`: enemy defeat or player death emphasis.
 - `shrine`: checkpoint or shrine interaction.
@@ -18,7 +20,7 @@ Audio feedback must make combat state readable without relying on visuals alone.
 
 Combat cues are grouped by gameplay priority:
 
-- Critical: `hit`, `block`, `enemy-windup`, `enemy-attack`, `death`.
+- Critical: `hit`, `block`, `enemy-windup`, `enemy-attack`, `boss-cleave-attack`, `boss-lunge-attack`, `death`.
 - Action confirmation: `attack`, `dodge`, `shrine`.
 - World bed: `ambience`, future area loops, future boss loops.
 
@@ -29,6 +31,7 @@ Critical cues must remain audible over ambience. Action confirmation cues should
 - Player action cues must start in the same update that enters the action state.
 - Enemy windup cues must start when the enemy enters `Windup`, not when damage becomes active.
 - Enemy attack cues must start when the enemy enters active `Attack` frames.
+- Boss attack cues must use the active boss pattern's named cue ID rather than the generic minor-enemy attack cue.
 - Hit and block cues must play after combat resolution confirms the result.
 - Death cues must play once per defeated enemy or player death event.
 - Repeated cues should avoid stacking into distortion during crowded fights.
@@ -49,7 +52,7 @@ Critical cues must remain audible over ambience. Action confirmation cues should
 
 ## Runtime Direction
 
-The current implementation uses Web Audio synthesis so the project has audible feedback without third-party files. Synthesized cues should be louder and more distinct than the previous test tones, but short enough to avoid masking combat timing.
+The current implementation uses Web Audio synthesis so the project has audible feedback without third-party files. `AudioDirector.requiredCueIds` and the cue map define the file-ready cue taxonomy while preserving synthesized fallback layers. Synthesized cues should be louder and more distinct than the previous test tones, but short enough to avoid masking combat timing.
 
 When adding file-based audio:
 

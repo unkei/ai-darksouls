@@ -43,6 +43,7 @@ The player must be able to identify action state, threat direction, and active d
 
 - `Idle`, `Walk`, and `Run` must keep facing direction visible from the chase camera.
 - `Attack` must show startup intent, weapon motion, and a forward arc during the strike.
+- The player attack startup cue and active attack arc are separate named effects so the state is readable without making startup look like active damage.
 - `Guard` must show a shield or guard plane in front of the player before incoming damage is resolved.
 - `Dodge` must show body compression or trail motion and must remain visually distinct from ordinary movement.
 - `HitStun` must use a short body flash or recoil pose that cannot be confused with an attack.
@@ -55,12 +56,14 @@ The player must be able to identify action state, threat direction, and active d
 - `Windup` must present a readable warning before active damage frames. The warning can combine pose, ground ring, glow, weapon lift, or sound, but it must be visible from the default camera.
 - `Attack` must show the active direction and approximate range with a weapon path, arc, or flash.
 - `Recovery` must visibly relax or lower threat so the player can learn punish timing.
+- `Recovery` uses a named low-threat cue and lowered weapon pose rather than warning rings or active attack arcs.
 - `HitStun` must be distinct from `Windup` and `Attack`.
 - `Dead` enemies must stop showing threat effects.
 
 ### Boss Signals
 
 - Boss attacks must be grouped into named patterns before implementation.
+- The current boss patterns are `boss-cleave` and `boss-lunge`; the lunge pattern increases range and shows a larger pattern marker.
 - Each boss pattern needs a unique windup pose, a unique audio cue, or both.
 - Longer-range boss attacks must show more spatial information than short melee attacks.
 - Phase or pattern changes must have a visible transition instead of silently changing timing.

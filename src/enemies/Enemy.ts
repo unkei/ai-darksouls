@@ -109,6 +109,7 @@ type EnemyRig = {
   weapon: THREE.Object3D;
   warningRing: THREE.Object3D;
   attackArc: THREE.Object3D;
+  recoveryCue: THREE.Object3D;
   hitFlash: THREE.Object3D;
 };
 
@@ -144,7 +145,7 @@ const createEnemyMesh = (config: EnemyConfig): { group: THREE.Group; rig: EnemyR
 
   const warningRing = new THREE.Mesh(
     new THREE.RingGeometry(config.attackRange * 0.75, config.attackRange, 16),
-    new THREE.MeshBasicMaterial({ color: 0xff6b35, transparent: true, opacity: 0.34, side: THREE.DoubleSide }),
+    new THREE.MeshBasicMaterial({ color: 0xff6b35, transparent: true, opacity: 0.34, side: THREE.DoubleSide, depthWrite: false }),
   );
   warningRing.name = 'enemy-warning-ring';
   warningRing.rotation.x = -Math.PI / 2;
@@ -153,23 +154,32 @@ const createEnemyMesh = (config: EnemyConfig): { group: THREE.Group; rig: EnemyR
 
   const attackArc = new THREE.Mesh(
     new THREE.TorusGeometry(config.attackRange * 0.58, 0.045, 6, 18, Math.PI * 1.2),
-    new THREE.MeshBasicMaterial({ color: 0xff2828, transparent: true, opacity: 0.66, side: THREE.DoubleSide }),
+    new THREE.MeshBasicMaterial({ color: 0xff2828, transparent: true, opacity: 0.66, side: THREE.DoubleSide, depthWrite: false }),
   );
   attackArc.name = 'enemy-attack-arc';
   attackArc.position.set(0, 0.72, config.radius * 0.58);
   attackArc.rotation.set(Math.PI / 2, 0, -0.4);
   attackArc.visible = false;
 
+  const recoveryCue = new THREE.Mesh(
+    new THREE.BoxGeometry(config.radius * 1.45, 0.08, 0.1),
+    new THREE.MeshBasicMaterial({ color: 0x7fb5ff, transparent: true, opacity: 0.42, depthWrite: false }),
+  );
+  recoveryCue.name = 'enemy-recovery-cue';
+  recoveryCue.position.set(0, 0.52, config.radius * 0.45);
+  recoveryCue.rotation.x = -0.25;
+  recoveryCue.visible = false;
+
   const hitFlash = new THREE.Mesh(
     new THREE.SphereGeometry(config.radius * 1.05, 8, 6),
-    new THREE.MeshBasicMaterial({ color: 0xffd66b, transparent: true, opacity: 0.4 }),
+    new THREE.MeshBasicMaterial({ color: 0xffd66b, transparent: true, opacity: 0.4, depthWrite: false, wireframe: true }),
   );
   hitFlash.name = 'enemy-hit-flash';
   hitFlash.position.y = 0.78;
   hitFlash.visible = false;
 
-  group.add(body, head, eye, leftArm, rightArm, leftLeg, rightLeg, warningRing, attackArc, hitFlash);
-  return { group, rig: { leftArm, rightArm, leftLeg, rightLeg, weapon, warningRing, attackArc, hitFlash } };
+  group.add(body, head, eye, leftArm, rightArm, leftLeg, rightLeg, warningRing, attackArc, recoveryCue, hitFlash);
+  return { group, rig: { leftArm, rightArm, leftLeg, rightLeg, weapon, warningRing, attackArc, recoveryCue, hitFlash } };
 };
 
 const enemyLimb = (name: string, material: THREE.Material, radius: number, length: number): THREE.Mesh => {
@@ -183,6 +193,7 @@ const poseEnemyRig = (rig: EnemyRig, state: EnemyState, time: number): void => {
   rig.weapon.visible = state !== 'Dead';
   rig.warningRing.visible = state === 'Windup';
   rig.attackArc.visible = state === 'Attack';
+  rig.recoveryCue.visible = state === 'Recovery';
   rig.hitFlash.visible = state === 'HitStun';
   rig.leftArm.rotation.set(0.05, 0, 0.35);
   rig.rightArm.rotation.set(0.05, 0, -0.35);
@@ -191,6 +202,7 @@ const poseEnemyRig = (rig: EnemyRig, state: EnemyState, time: number): void => {
   rig.weapon.rotation.set(-0.1, 0, 0);
   rig.warningRing.scale.setScalar(1);
   rig.attackArc.scale.setScalar(1);
+  rig.recoveryCue.scale.setScalar(1);
   rig.hitFlash.scale.setScalar(1);
 
   if (state === 'Windup') {
@@ -205,7 +217,10 @@ const poseEnemyRig = (rig: EnemyRig, state: EnemyState, time: number): void => {
     rig.attackArc.rotation.z = -0.6 + Math.min(1, time / 0.12) * 1.1;
   }
   if (state === 'Recovery') {
-    rig.rightArm.rotation.set(-0.35, 0, -0.35);
+    rig.rightArm.rotation.set(0.18, 0.05, -0.28);
+    rig.leftArm.rotation.set(0.22, -0.12, 0.34);
+    rig.weapon.rotation.set(0.12, 0, 0);
+    rig.recoveryCue.scale.set(1, 1, 0.85 + Math.sin(time * 10) * 0.06);
   }
   if (state === 'HitStun') {
     rig.leftArm.rotation.x = 0.8;

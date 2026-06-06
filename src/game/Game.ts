@@ -60,6 +60,7 @@ export class Game {
 
   private update(delta: number): void {
     const input = this.input.update();
+    if (hasPlayerInteraction(input)) this.audio.unlock();
     this.cameraYaw += input.camera.x;
     this.cameraPitch = THREE.MathUtils.clamp(this.cameraPitch + input.camera.y, 0.08, 0.9);
 
@@ -87,7 +88,10 @@ export class Game {
         const previousEnemyState = enemy.fsm.state;
         enemy.update(delta, this.player);
         if (previousEnemyState !== 'Windup' && enemy.fsm.state === 'Windup') this.audio.playEnemyWindup();
-        if (previousEnemyState !== 'Attack' && enemy.fsm.state === 'Attack') this.audio.playEnemyAttack();
+        if (previousEnemyState !== 'Attack' && enemy.fsm.state === 'Attack') {
+          if (enemy instanceof Boss) this.audio.playBossAttack(enemy.currentAttackCueId);
+          else this.audio.playEnemyAttack();
+        }
       }
       const beforeHp = this.player.hp;
       const beforeStamina = this.player.stamina;
@@ -124,3 +128,16 @@ export class Game {
     ].join(',');
   }
 }
+
+const hasPlayerInteraction = (input: ReturnType<InputManager['update']>): boolean =>
+  input.attack ||
+  input.dodge ||
+  input.guard ||
+  input.interact ||
+  input.heal ||
+  input.lockOn ||
+  input.run ||
+  Math.abs(input.move.x) > 0.01 ||
+  Math.abs(input.move.y) > 0.01 ||
+  Math.abs(input.camera.x) > 0.01 ||
+  Math.abs(input.camera.y) > 0.01;
