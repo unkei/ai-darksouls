@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { AudioDirector } from '../audio/AudioDirector';
 import { CombatSystem } from '../combat/CombatSystem';
 import { Boss } from '../enemies/Boss';
 import { Enemy, enemyConfigs } from '../enemies/Enemy';
@@ -19,11 +20,12 @@ export class Game {
   private readonly player = new Player();
   private readonly dungeon = new Dungeon();
   private readonly combat = new CombatSystem();
+  private readonly audio = new AudioDirector();
   private readonly enemies: Array<Enemy | Boss>;
   private readonly boss = new Boss({ x: 0, y: 0, z: -22 });
   private readonly hud: Hud;
   private cameraYaw = 0;
-  private cameraPitch = 0.52;
+  private cameraPitch = 0.22;
   private deathHandled = false;
   private message = 'Explore the keep. Open the shortcut. Defeat the warden.';
 
@@ -41,6 +43,7 @@ export class Game {
     ];
     this.scene.scene.add(this.dungeon.group, this.player.mesh, ...this.enemies.map((enemy) => enemy.mesh));
     this.loop = new Loop((delta) => this.update(delta));
+    this.audio.startAmbience();
     this.updateCamera();
   }
 
@@ -51,13 +54,14 @@ export class Game {
   dispose(): void {
     this.loop.stop();
     this.input.dispose();
+    this.audio.dispose();
     this.scene.dispose();
   }
 
   private update(delta: number): void {
     const input = this.input.update();
     this.cameraYaw += input.camera.x;
-    this.cameraPitch = THREE.MathUtils.clamp(this.cameraPitch + input.camera.y, 0.18, 0.9);
+    this.cameraPitch = THREE.MathUtils.clamp(this.cameraPitch + input.camera.y, 0.08, 0.9);
 
     if (this.player.fsm.state === 'Dead') {
       if (!this.deathHandled) {
@@ -72,21 +76,31 @@ export class Game {
         this.message = 'Echoes remain where you fell.';
       }
     } else {
+      const previousPlayerState: string = this.player.fsm.state;
       this.player.update(delta, input, this.cameraYaw);
       this.dungeon.update(this.player, input.interact);
+      this.player.syncVisuals();
+      const currentPlayerState: string = this.player.fsm.state;
+      if (previousPlayerState !== 'Attack' && currentPlayerState === 'Attack') this.audio.playAttack();
       for (const enemy of this.enemies) enemy.update(delta, this.player);
+      const beforeHp = this.player.hp;
+      const defeatedBefore = this.enemies.filter((enemy) => enemy.fsm.state === 'Dead').length;
       this.combat.update(this.player, this.enemies);
+      const defeatedAfter = this.enemies.filter((enemy) => enemy.fsm.state === 'Dead').length;
+      if (this.player.hp < beforeHp) this.audio.playHit();
+      if (defeatedAfter > defeatedBefore) this.audio.playDeath();
       if (this.boss.fsm.state === 'Dead') this.message = 'The Ashen Warden is defeated.';
     }
 
     this.updateCamera();
     this.hud.update(this.player, this.boss, this.message);
-    this.scene.render();
+    this.audio.update(delta);
+    this.scene.render(delta);
   }
 
   private updateCamera(): void {
-    const radius = 6.5;
-    const target = new THREE.Vector3(this.player.position.x, 1.0, this.player.position.z);
+    const radius = 4.8;
+    const target = new THREE.Vector3(this.player.position.x, 0.7, this.player.position.z);
     const behind = new THREE.Vector3(
       Math.sin(this.cameraYaw) * Math.cos(this.cameraPitch) * radius,
       0,

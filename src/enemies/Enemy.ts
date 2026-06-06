@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { clamp, distance3, normalize3, Vec3 } from '../core/Vector';
+import { createAtlasTexture } from '../game/GeneratedTextures';
 import { StateMachine } from '../core/StateMachine';
 import { Player } from '../player/Player';
 
@@ -27,12 +28,16 @@ export class Enemy {
   spawn: Vec3;
   position: Vec3;
   hasHitThisAttack = false;
+  facing = 0;
+  protected readonly rig: EnemyRig;
 
   constructor(readonly config: EnemyConfig, position: Vec3) {
     this.spawn = { ...position };
     this.position = { ...position };
     this.hp = config.maxHp;
-    this.mesh = createEnemyMesh(config);
+    const built = createEnemyMesh(config);
+    this.mesh = built.group;
+    this.rig = built.rig;
     this.syncMesh();
   }
 
@@ -55,9 +60,13 @@ export class Enemy {
         this.fsm.set('Windup');
       } else {
         const direction = normalize3({ x: player.position.x - this.position.x, y: 0, z: player.position.z - this.position.z });
+        this.facing = Math.atan2(direction.x, direction.z);
         this.position.x += direction.x * this.config.speed * delta;
         this.position.z += direction.z * this.config.speed * delta;
       }
+    }
+    if (this.fsm.state === 'Windup' || this.fsm.state === 'Attack' || this.fsm.state === 'Recovery') {
+      this.facing = Math.atan2(player.position.x - this.position.x, player.position.z - this.position.z);
     }
     this.syncMesh();
   }
@@ -84,19 +93,86 @@ export class Enemy {
 
   protected syncMesh(): void {
     this.mesh.position.set(this.position.x, this.position.y, this.position.z);
+    this.mesh.rotation.y = this.facing;
     const warn = this.fsm.state === 'Windup' || this.fsm.state === 'Attack';
-    this.mesh.scale.setScalar(warn ? 1.15 : 1);
+    this.mesh.scale.setScalar(warn ? 1.08 : 1);
+    poseEnemyRig(this.rig, this.fsm.state, this.fsm.timeInState);
   }
 }
 
-const createEnemyMesh = (config: EnemyConfig): THREE.Group => {
+type EnemyRig = {
+  leftArm: THREE.Object3D;
+  rightArm: THREE.Object3D;
+  leftLeg: THREE.Object3D;
+  rightLeg: THREE.Object3D;
+  weapon: THREE.Object3D;
+};
+
+const createEnemyMesh = (config: EnemyConfig): { group: THREE.Group; rig: EnemyRig } => {
   const group = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.ConeGeometry(config.radius, 1.15, 5), new THREE.MeshStandardMaterial({ color: config.color }));
-  body.position.y = 0.58;
-  const eye = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.08, 0.05), new THREE.MeshStandardMaterial({ color: 0xff4a35 }));
-  eye.position.set(0, 0.85, config.radius * 0.75);
-  group.add(body, eye);
-  return group;
+  const armorTexture = createAtlasTexture('armor', [1, 1]);
+  const hide = new THREE.MeshStandardMaterial({ color: config.color, roughness: 0.9, metalness: 0.05, map: armorTexture });
+  const ember = new THREE.MeshStandardMaterial({ color: 0xff4a35, emissive: 0x7a1208, emissiveIntensity: 1.5 });
+  const bone = new THREE.MeshStandardMaterial({ color: 0x776452, roughness: 0.8, map: armorTexture });
+  const iron = new THREE.MeshStandardMaterial({ color: 0x8f948d, roughness: 0.55, metalness: 0.48 });
+
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(config.radius * 0.72, 0.75, 4, 8), hide);
+  body.name = 'enemy-body';
+  body.position.y = 0.72;
+  const head = new THREE.Mesh(new THREE.ConeGeometry(config.radius * 0.55, 0.42, 5), hide);
+  head.name = 'enemy-head';
+  head.position.y = 1.25;
+  const eye = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.08, 0.05), ember);
+  eye.name = 'enemy-eye';
+  eye.position.set(0, 1.23, config.radius * 0.45);
+  const leftArm = enemyLimb('enemy-left-arm', bone, config.radius * 0.18, 0.5);
+  leftArm.position.set(-config.radius * 0.8, 0.9, 0);
+  const rightArm = enemyLimb('enemy-right-arm', bone, config.radius * 0.18, 0.5);
+  rightArm.position.set(config.radius * 0.8, 0.9, 0);
+  const leftLeg = enemyLimb('enemy-left-leg', hide, config.radius * 0.2, 0.46);
+  leftLeg.position.set(-config.radius * 0.28, 0.32, 0);
+  const rightLeg = enemyLimb('enemy-right-leg', hide, config.radius * 0.2, 0.46);
+  rightLeg.position.set(config.radius * 0.28, 0.32, 0);
+  const weapon = new THREE.Mesh(new THREE.BoxGeometry(config.radius * 0.15, config.radius * 0.15, config.radius * 1.6), iron);
+  weapon.name = 'enemy-weapon';
+  weapon.position.set(0, -0.25, config.radius * 0.7);
+  rightArm.add(weapon);
+
+  group.add(body, head, eye, leftArm, rightArm, leftLeg, rightLeg);
+  return { group, rig: { leftArm, rightArm, leftLeg, rightLeg, weapon } };
+};
+
+const enemyLimb = (name: string, material: THREE.Material, radius: number, length: number): THREE.Mesh => {
+  const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(radius, length, 4, 8), material);
+  mesh.name = name;
+  return mesh;
+};
+
+const poseEnemyRig = (rig: EnemyRig, state: EnemyState, time: number): void => {
+  const stride = Math.sin(time * 10) * 0.35;
+  rig.weapon.visible = state !== 'Dead';
+  rig.leftArm.rotation.set(0.05, 0, 0.35);
+  rig.rightArm.rotation.set(0.05, 0, -0.35);
+  rig.leftLeg.rotation.set(stride, 0, 0.03);
+  rig.rightLeg.rotation.set(-stride, 0, -0.03);
+  rig.weapon.rotation.set(-0.1, 0, 0);
+
+  if (state === 'Windup') {
+    rig.rightArm.rotation.set(0.75, -0.25, -0.55);
+    rig.weapon.rotation.set(0.55, 0, 0);
+  }
+  if (state === 'Attack') {
+    rig.rightArm.rotation.set(-0.95, -0.12, -0.4);
+    rig.leftArm.rotation.set(-0.3, 0.18, 0.45);
+    rig.weapon.rotation.set(-0.7, 0, 0);
+  }
+  if (state === 'Recovery') {
+    rig.rightArm.rotation.set(-0.35, 0, -0.35);
+  }
+  if (state === 'HitStun') {
+    rig.leftArm.rotation.x = 0.8;
+    rig.rightArm.rotation.x = 0.8;
+  }
 };
 
 export const enemyConfigs = {
