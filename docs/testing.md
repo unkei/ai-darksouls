@@ -29,6 +29,8 @@ Manual checks before Ready For Review:
 - Death, respawn, dropped echoes, and recovery.
 - Shortcut door opens and remains open after interaction.
 - Boss telegraphs before active damage.
+- Combat readability matches [Visual Design](visual-design.md): player and enemy action states are identifiable without debug text.
+- Audio feedback matches [Audio Design](audio-design.md): combat-critical cues are audible over ambience and mapped to the correct events.
 
 ## PR Review Checklist
 
@@ -40,3 +42,4 @@ Manual checks before Ready For Review:
 - Tests cover important behavior, not only DOM presence.
 - Render loop avoids repeated geometry/material creation.
 - No protected names, assets, layouts, or character designs are copied.
+- Audio assets, when present, have license records in `docs/audio-credits.md`.

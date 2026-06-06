@@ -35,6 +35,51 @@ Combat readability is a gameplay requirement, not only polish:
 
 Future asset upgrades should preserve these signals even if primitive geometry is replaced with glTF or authored low-poly models.
 
+## Combat Readability Specification
+
+The player must be able to identify action state, threat direction, and active danger without reading debug text. Visual readability has priority over atmospheric darkness when those goals conflict.
+
+### Player Signals
+
+- `Idle`, `Walk`, and `Run` must keep facing direction visible from the chase camera.
+- `Attack` must show startup intent, weapon motion, and a forward arc during the strike.
+- `Guard` must show a shield or guard plane in front of the player before incoming damage is resolved.
+- `Dodge` must show body compression or trail motion and must remain visually distinct from ordinary movement.
+- `HitStun` must use a short body flash or recoil pose that cannot be confused with an attack.
+- `Dead` must remove ambiguity by freezing, collapsing, hiding active combat effects, or using another clear non-combat pose.
+- Healing and interaction states must show a non-attack pose so players do not mistake them for active strikes.
+
+### Enemy Signals
+
+- Each enemy archetype must have a distinct silhouette feature beyond color alone.
+- `Windup` must present a readable warning before active damage frames. The warning can combine pose, ground ring, glow, weapon lift, or sound, but it must be visible from the default camera.
+- `Attack` must show the active direction and approximate range with a weapon path, arc, or flash.
+- `Recovery` must visibly relax or lower threat so the player can learn punish timing.
+- `HitStun` must be distinct from `Windup` and `Attack`.
+- `Dead` enemies must stop showing threat effects.
+
+### Boss Signals
+
+- Boss attacks must be grouped into named patterns before implementation.
+- Each boss pattern needs a unique windup pose, a unique audio cue, or both.
+- Longer-range boss attacks must show more spatial information than short melee attacks.
+- Phase or pattern changes must have a visible transition instead of silently changing timing.
+
+### Camera, Lighting, And Environment
+
+- Combat VFX must remain visible against floor, fog, and wall materials.
+- Fog and darkness must not hide windup rings, attack arcs, or player facing markers inside normal combat range.
+- The default camera should keep the player and current melee threat in frame during close combat.
+- Background lights may guide navigation, but combat-critical effects must not depend on subtle lighting changes alone.
+
+### Acceptance Criteria
+
+- A player can identify player `Attack`, `Guard`, `Dodge`, and `HitStun` from a still frame.
+- A player can identify enemy `Windup`, `Attack`, `Recovery`, and `HitStun` from a short clip.
+- Active damage direction is visible before or during the damage window.
+- State-specific effects use named scene nodes or equivalent testable contracts.
+- Low-poly or authored model upgrades preserve the same gameplay signals.
+
 ## Copyright Boundary
 
 Do not use protected names, logos, UI layouts, character likenesses, map layouts, boss designs, sound effects, or extracted assets from existing games.
