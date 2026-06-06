@@ -28,4 +28,37 @@ describe('ambience and audio hooks', () => {
     expect(audio.isAmbienceActive).toBe(true);
     vi.restoreAllMocks();
   });
+
+  it('represents every required cue as deterministic data', () => {
+    const audio = new AudioDirector();
+
+    expect(AudioDirector.requiredCueIds).toEqual([
+      'attack',
+      'dodge',
+      'block',
+      'enemy-windup',
+      'enemy-attack',
+      'boss-cleave-attack',
+      'boss-lunge-attack',
+      'hit',
+      'death',
+      'shrine',
+      'ambience',
+    ]);
+
+    for (const cueId of AudioDirector.requiredCueIds) audio.play(cueId);
+
+    expect(audio.events).toEqual(AudioDirector.requiredCueIds);
+  });
+
+  it('does not duplicate ambience events across repeated starts', () => {
+    const audio = new AudioDirector();
+
+    audio.startAmbience();
+    audio.startAmbience();
+    audio.dispose();
+
+    expect(audio.events).toEqual(['ambience']);
+    expect(audio.isAmbienceActive).toBe(false);
+  });
 });
