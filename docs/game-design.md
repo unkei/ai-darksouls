@@ -1,5 +1,7 @@
 # Game Design
 
+This document describes Hollow Keep-specific game design. Reusable guidance for structuring game specifications belongs in [Game Specification Guide](game-specification-guide.md).
+
 ## Pillars
 
 - Small, dense dungeon with learnable enemy placement.
