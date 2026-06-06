@@ -3,6 +3,7 @@ import { InputState } from '../input/InputState';
 export type GameFlowState = 'Opening' | 'Playing' | 'GameOver' | 'Clear' | 'Ending';
 
 export type GameFlowUpdate = Pick<InputState, 'interact'> & {
+  advance?: boolean;
   playerDead: boolean;
   bossDead: boolean;
 };
@@ -13,13 +14,13 @@ export class GameFlow {
   get message(): string {
     switch (this.state) {
       case 'Opening':
-        return 'Hollow Keep\nPress Interact to enter the keep.';
+        return 'HOLLOW KEEP\nThe last ember answers your oath.\nFind the shortcut. Break the warden. Leave with your echoes.\nAny button to enter the keep.';
       case 'GameOver':
-        return 'Game Over\nPress Interact to rise at the cinder shrine.';
+        return 'YOU DIED\nYour echoes stain the stone where you fell.\nRise at the cinder shrine and reclaim them.\nAny button to stand again.';
       case 'Clear':
-        return 'Ashen Warden defeated\nPress Interact to walk beyond the keep.';
+        return 'WARDEN VANQUISHED\nThe locked gate exhales cold daylight.\nThe keep remembers your path through ash and iron.\nAny button to walk beyond the keep.';
       case 'Ending':
-        return 'Ending\nStaff Roll\nunno';
+        return 'ENDING\nAsh settles over Hollow Keep.\nCreated by unno\nThank you for playing.';
       case 'Playing':
       default:
         return '';
@@ -27,8 +28,9 @@ export class GameFlow {
   }
 
   update(update: GameFlowUpdate): void {
+    const advance = update.advance || update.interact;
     if (this.state === 'Opening') {
-      if (update.interact) this.state = 'Playing';
+      if (advance) this.state = 'Playing';
       return;
     }
     if (this.state === 'Playing') {
@@ -37,10 +39,10 @@ export class GameFlow {
       return;
     }
     if (this.state === 'GameOver') {
-      if (update.interact) this.state = 'Playing';
+      if (advance) this.state = 'Playing';
       return;
     }
-    if (this.state === 'Clear' && update.interact) {
+    if (this.state === 'Clear' && advance) {
       this.state = 'Ending';
     }
   }

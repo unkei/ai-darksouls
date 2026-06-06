@@ -106,22 +106,72 @@ canvas {
 .flow-overlay {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 24px;
   box-sizing: border-box;
   white-space: pre-line;
   text-align: center;
-  font-size: clamp(20px, 4vw, 42px);
+  font-size: 16px;
   line-height: 1.35;
   letter-spacing: 0;
   color: #f1e6d0;
-  background: rgb(8 9 8 / 72%);
+  background:
+    radial-gradient(circle at 50% 42%, rgb(155 128 82 / 22%), transparent 36%),
+    linear-gradient(180deg, rgb(8 9 8 / 88%), rgb(18 13 10 / 76%) 52%, rgb(5 6 6 / 90%));
   text-shadow: 0 2px 6px #000;
 }
 
 .flow-overlay[hidden] {
   display: none;
+}
+
+.flow-panel {
+  width: min(760px, 88vw);
+  border-top: 1px solid rgb(236 230 216 / 48%);
+  border-bottom: 1px solid rgb(236 230 216 / 38%);
+  padding: 28px 18px 24px;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 10%),
+    0 18px 60px rgb(0 0 0 / 38%);
+  background: linear-gradient(90deg, transparent, rgb(28 24 19 / 46%) 18%, rgb(28 24 19 / 46%) 82%, transparent);
+}
+
+.flow-kicker {
+  min-height: 20px;
+  color: #cbbd9b;
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.flow-title {
+  margin: 8px 0 12px;
+  color: #fff1c8;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(34px, 7vw, 82px);
+  line-height: 0.95;
+  text-shadow:
+    0 2px 8px #000,
+    0 0 22px rgb(215 157 75 / 36%);
+}
+
+.flow-body {
+  max-width: 620px;
+  margin: 0 auto;
+  color: #e4d8be;
+  font-size: clamp(14px, 2vw, 19px);
+}
+
+.flow-prompt {
+  display: inline-block;
+  margin-top: 22px;
+  padding: 8px 14px;
+  border: 1px solid rgb(236 230 216 / 36%);
+  color: #f6e6bc;
+  background: rgb(10 10 9 / 42%);
+  font-size: 12px;
+  text-transform: uppercase;
 }
 
 .touch-controls {
@@ -206,6 +256,19 @@ canvas {
   }
 
   .flow-overlay {
-    font-size: 24px;
+    padding: 18px;
+  }
+
+  .flow-panel {
+    width: 92vw;
+    padding: 22px 12px 20px;
+  }
+
+  .flow-title {
+    font-size: 40px;
+  }
+
+  .flow-body {
+    font-size: 14px;
   }
 }

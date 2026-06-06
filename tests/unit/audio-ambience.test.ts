@@ -24,6 +24,7 @@ describe('ambience and audio hooks', () => {
     audio.playHit();
     audio.playShrine();
     audio.playEnemyDefeatRoar();
+    audio.startBgm();
     audio.startAmbience();
     audio.update(0.5);
 
@@ -38,8 +39,10 @@ describe('ambience and audio hooks', () => {
       'hit',
       'shrine',
       'enemy-defeat-roar',
+      'bgm',
       'ambience',
     ]);
+    expect(audio.isBgmActive).toBe(true);
     expect(audio.isAmbienceActive).toBe(true);
     vi.restoreAllMocks();
   });
@@ -61,6 +64,7 @@ describe('ambience and audio hooks', () => {
       'death',
       'enemy-defeat-roar',
       'shrine',
+      'bgm',
       'ambience',
     ]);
 
@@ -78,5 +82,16 @@ describe('ambience and audio hooks', () => {
 
     expect(audio.events).toEqual(['ambience']);
     expect(audio.isAmbienceActive).toBe(false);
+  });
+
+  it('does not duplicate bgm events across repeated starts', () => {
+    const audio = new AudioDirector();
+
+    audio.startBgm();
+    audio.startBgm();
+    audio.dispose();
+
+    expect(audio.events).toEqual(['bgm']);
+    expect(audio.isBgmActive).toBe(false);
   });
 });

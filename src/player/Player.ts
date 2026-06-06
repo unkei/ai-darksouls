@@ -57,7 +57,7 @@ export class Player {
     if (input.dodge && this.canAct() && this.stamina >= PLAYER.dodgeCost) {
       this.spendStamina(PLAYER.dodgeCost);
       const move = normalize2(input.move);
-      const yaw = cameraYaw + Math.atan2(move.x, move.y || 1);
+      const yaw = cameraYaw - Math.atan2(move.x, move.y || 1);
       this.dodgeDirection = { x: Math.sin(yaw), y: 0, z: Math.cos(yaw) };
       this.fsm.set('Dodge');
       this.syncMesh();
@@ -127,7 +127,7 @@ export class Player {
       return;
     }
     const speed = input.run && this.stamina > 5 ? PLAYER.runSpeed : PLAYER.walkSpeed;
-    const yaw = cameraYaw + Math.atan2(move.x, move.y);
+    const yaw = cameraYaw - Math.atan2(move.x, move.y);
     this.facing = yaw;
     this.position.x += Math.sin(yaw) * speed * delta;
     this.position.z += Math.cos(yaw) * speed * delta;

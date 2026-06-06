@@ -127,6 +127,7 @@ export class Dungeon {
       material.transparent = faded;
       material.opacity = faded ? 0.32 : 1;
       material.depthWrite = !faded;
+      mesh.renderOrder = faded ? 2 : 0;
     }
   }
 

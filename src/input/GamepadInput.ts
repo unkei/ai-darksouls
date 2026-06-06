@@ -23,6 +23,7 @@ export class GamepadInput implements InputProvider {
     state.heal = Boolean(pad.buttons[3]?.pressed);
     state.guard = Boolean(pad.buttons[4]?.pressed);
     state.lockOn = Boolean(pad.buttons[5]?.pressed);
+    state.advance = pad.buttons.some((button) => button.pressed);
     return state;
   }
 }

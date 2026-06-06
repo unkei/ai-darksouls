@@ -10,7 +10,7 @@ describe('Player visuals', () => {
 
     player.update(0.1, input, 0);
 
-    expect(player.facing).toBeCloseTo(Math.PI / 2, 3);
+    expect(player.facing).toBeCloseTo(-Math.PI / 2, 3);
     expect(player.mesh.rotation.y).toBeCloseTo(player.facing, 3);
     expect(player.mesh.getObjectByName('player-left-arm')).toBeTruthy();
     expect(player.mesh.getObjectByName('player-right-arm')).toBeTruthy();
