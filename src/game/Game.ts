@@ -82,12 +82,20 @@ export class Game {
       this.player.syncVisuals();
       const currentPlayerState: string = this.player.fsm.state;
       if (previousPlayerState !== 'Attack' && currentPlayerState === 'Attack') this.audio.playAttack();
-      for (const enemy of this.enemies) enemy.update(delta, this.player);
+      if (previousPlayerState !== 'Dodge' && currentPlayerState === 'Dodge') this.audio.playDodge();
+      for (const enemy of this.enemies) {
+        const previousEnemyState = enemy.fsm.state;
+        enemy.update(delta, this.player);
+        if (previousEnemyState !== 'Windup' && enemy.fsm.state === 'Windup') this.audio.playEnemyWindup();
+        if (previousEnemyState !== 'Attack' && enemy.fsm.state === 'Attack') this.audio.playEnemyAttack();
+      }
       const beforeHp = this.player.hp;
+      const beforeStamina = this.player.stamina;
       const defeatedBefore = this.enemies.filter((enemy) => enemy.fsm.state === 'Dead').length;
       this.combat.update(this.player, this.enemies);
       const defeatedAfter = this.enemies.filter((enemy) => enemy.fsm.state === 'Dead').length;
       if (this.player.hp < beforeHp) this.audio.playHit();
+      else if (currentPlayerState === 'Guard' && this.player.stamina < beforeStamina) this.audio.playBlock();
       if (defeatedAfter > defeatedBefore) this.audio.playDeath();
       if (this.boss.fsm.state === 'Dead') this.message = 'The Ashen Warden is defeated.';
     }

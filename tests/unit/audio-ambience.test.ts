@@ -15,11 +15,16 @@ describe('ambience and audio hooks', () => {
     const audio = new AudioDirector();
 
     audio.playAttack();
+    audio.playDodge();
+    audio.playBlock();
+    audio.playEnemyWindup();
+    audio.playEnemyAttack();
     audio.playHit();
+    audio.playShrine();
     audio.startAmbience();
     audio.update(0.5);
 
-    expect(audio.events).toEqual(['attack', 'hit', 'ambience']);
+    expect(audio.events).toEqual(['attack', 'dodge', 'block', 'enemy-windup', 'enemy-attack', 'hit', 'shrine', 'ambience']);
     expect(audio.isAmbienceActive).toBe(true);
     vi.restoreAllMocks();
   });

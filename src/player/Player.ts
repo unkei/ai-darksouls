@@ -161,6 +161,10 @@ type PlayerRig = {
   leftLeg: THREE.Object3D;
   rightLeg: THREE.Object3D;
   weapon: THREE.Object3D;
+  attackArc: THREE.Object3D;
+  guardShield: THREE.Object3D;
+  dodgeTrail: THREE.Object3D;
+  hitFlash: THREE.Object3D;
 };
 
 const createPlayerMesh = (): { group: THREE.Group; rig: PlayerRig } => {
@@ -212,8 +216,42 @@ const createPlayerMesh = (): { group: THREE.Group; rig: PlayerRig } => {
   weapon.rotation.x = -0.2;
   rightArm.add(weapon);
 
-  group.add(body, mantle, head, face, leftArm, rightArm, leftLeg, rightLeg);
-  return { group, rig: { leftArm, rightArm, leftLeg, rightLeg, weapon } };
+  const attackArc = new THREE.Mesh(
+    new THREE.TorusGeometry(0.72, 0.035, 6, 18, Math.PI * 1.15),
+    new THREE.MeshBasicMaterial({ color: 0xffd27a, transparent: true, opacity: 0.72, side: THREE.DoubleSide }),
+  );
+  attackArc.name = 'player-attack-arc';
+  attackArc.position.set(0, 0.78, 0.35);
+  attackArc.rotation.set(Math.PI / 2, 0, -0.25);
+  attackArc.visible = false;
+
+  const guardShield = new THREE.Mesh(
+    new THREE.BoxGeometry(0.62, 0.72, 0.08),
+    new THREE.MeshBasicMaterial({ color: 0x8ec5ff, transparent: true, opacity: 0.36 }),
+  );
+  guardShield.name = 'player-guard-shield';
+  guardShield.position.set(0, 0.9, 0.58);
+  guardShield.visible = false;
+
+  const dodgeTrail = new THREE.Mesh(
+    new THREE.ConeGeometry(0.38, 1.05, 7),
+    new THREE.MeshBasicMaterial({ color: 0xb6d9ff, transparent: true, opacity: 0.28, side: THREE.DoubleSide }),
+  );
+  dodgeTrail.name = 'player-dodge-trail';
+  dodgeTrail.position.set(0, 0.35, -0.45);
+  dodgeTrail.rotation.x = Math.PI / 2;
+  dodgeTrail.visible = false;
+
+  const hitFlash = new THREE.Mesh(
+    new THREE.SphereGeometry(0.62, 8, 6),
+    new THREE.MeshBasicMaterial({ color: 0xff4f45, transparent: true, opacity: 0.42 }),
+  );
+  hitFlash.name = 'player-hit-flash';
+  hitFlash.position.y = 0.86;
+  hitFlash.visible = false;
+
+  group.add(body, mantle, head, face, leftArm, rightArm, leftLeg, rightLeg, attackArc, guardShield, dodgeTrail, hitFlash);
+  return { group, rig: { leftArm, rightArm, leftLeg, rightLeg, weapon, attackArc, guardShield, dodgeTrail, hitFlash } };
 };
 
 const limb = (name: string, material: THREE.Material, radius: number, length: number): THREE.Mesh => {
@@ -224,12 +262,20 @@ const limb = (name: string, material: THREE.Material, radius: number, length: nu
 
 const posePlayerRig = (rig: PlayerRig, state: PlayerState, time: number): void => {
   rig.weapon.visible = state === 'Attack' || state === 'Guard';
+  rig.attackArc.visible = state === 'Attack';
+  rig.guardShield.visible = state === 'Guard';
+  rig.dodgeTrail.visible = state === 'Dodge';
+  rig.hitFlash.visible = state === 'HitStun';
   const stride = Math.sin(time * 13) * 0.45;
   rig.leftArm.rotation.set(0, 0, 0.18);
   rig.rightArm.rotation.set(0, 0, -0.18);
   rig.leftLeg.rotation.set(0, 0, 0.05);
   rig.rightLeg.rotation.set(0, 0, -0.05);
   rig.weapon.rotation.set(-0.2, 0, 0);
+  rig.attackArc.scale.setScalar(1);
+  rig.guardShield.scale.setScalar(1);
+  rig.dodgeTrail.scale.setScalar(1);
+  rig.hitFlash.scale.setScalar(1);
 
   if (state === 'Walk' || state === 'Run') {
     rig.leftArm.rotation.x = -stride * 0.5;
@@ -240,17 +286,23 @@ const posePlayerRig = (rig: PlayerRig, state: PlayerState, time: number): void =
   if (state === 'Guard') {
     rig.leftArm.rotation.set(-0.7, 0.2, 0.5);
     rig.rightArm.rotation.set(-0.4, -0.1, -0.28);
+    rig.guardShield.scale.setScalar(1 + Math.sin(time * 12) * 0.04);
   }
   if (state === 'Attack') {
     const swing = Math.min(1, time / 0.16);
     rig.rightArm.rotation.set(-0.65 - swing * 0.7, -0.18, -0.35);
     rig.leftArm.rotation.set(-0.25, 0.15, 0.28);
     rig.weapon.rotation.set(-0.55 - swing * 0.65, 0, 0);
+    rig.attackArc.rotation.z = -0.45 + swing * 1.25;
   }
   if (state === 'Dodge') {
     rig.leftArm.rotation.x = 0.8;
     rig.rightArm.rotation.x = 0.7;
     rig.leftLeg.rotation.x = -0.7;
     rig.rightLeg.rotation.x = -0.5;
+    rig.dodgeTrail.scale.set(1, 1 + Math.min(1, time / 0.12) * 0.5, 1);
+  }
+  if (state === 'HitStun') {
+    rig.hitFlash.scale.setScalar(1 + Math.sin(time * 30) * 0.08);
   }
 };
