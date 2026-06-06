@@ -10,6 +10,7 @@ export type InputState = {
   heal: boolean;
   lockOn: boolean;
   run: boolean;
+  advance: boolean;
 };
 
 export const createInputState = (): InputState => ({
@@ -22,6 +23,7 @@ export const createInputState = (): InputState => ({
   heal: false,
   lockOn: false,
   run: false,
+  advance: false,
 });
 
 export interface InputProvider {
@@ -43,6 +45,7 @@ export const mergeInputStates = (states: InputState[]): InputState => {
     merged.heal ||= state.heal;
     merged.lockOn ||= state.lockOn;
     merged.run ||= state.run;
+    merged.advance ||= state.advance;
   }
   merged.move.x = Math.max(-1, Math.min(1, merged.move.x));
   merged.move.y = Math.max(-1, Math.min(1, merged.move.y));

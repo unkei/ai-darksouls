@@ -28,6 +28,7 @@ export class KeyboardMouseInput implements InputProvider {
     state.heal = this.keys.has('KeyR');
     state.lockOn = this.buttons.has(2) || this.keys.has('KeyQ');
     state.run = this.keys.has('ShiftLeft') || this.keys.has('ShiftRight');
+    state.advance = this.keys.size > 0 || this.buttons.size > 0;
     this.cameraX = 0;
     this.cameraY = 0;
     return state;

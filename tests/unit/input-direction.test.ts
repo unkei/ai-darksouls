@@ -41,4 +41,22 @@ describe('shared horizontal input direction', () => {
     expect(new GamepadInput(() => [leftPad]).update().move.x).toBe(-1);
     expect(new GamepadInput(() => [rightPad]).update().move.x).toBe(1);
   });
+
+  it('marks keyboard, touch, and gamepad buttons as flow advance input', () => {
+    const target = document.createElement('div');
+    const keyboard = new KeyboardMouseInput(target);
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyZ' }));
+    expect(keyboard.update().advance).toBe(true);
+    keyboard.dispose();
+
+    const parent = document.createElement('div');
+    const touch = new TouchInput(parent);
+    const stick = touch.root.querySelector<HTMLElement>('[data-zone="move"]');
+    stick?.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 1, clientX: 100, clientY: 100, bubbles: true }));
+    expect(touch.update().advance).toBe(true);
+    touch.dispose();
+
+    const pad: GamepadLike = { axes: [0, 0, 0, 0], buttons: [{ pressed: true }] };
+    expect(new GamepadInput(() => [pad]).update().advance).toBe(true);
+  });
 });

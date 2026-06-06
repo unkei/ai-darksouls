@@ -43,7 +43,8 @@ export class Hud {
     const overlay = this.root.querySelector<HTMLElement>('[data-value="flow-overlay"]');
     if (overlay) {
       overlay.hidden = flowState === 'Playing';
-      overlay.textContent = flowState === 'Playing' ? '' : message;
+      overlay.dataset.flowState = flowState;
+      overlay.innerHTML = flowState === 'Playing' ? '' : renderFlowOverlay(message);
     }
     const bossPanel = this.root.querySelector<HTMLElement>('.boss');
     if (bossPanel) bossPanel.hidden = boss.fsm.state === 'Dead' || boss.fsm.state === 'Idle';
@@ -57,6 +58,21 @@ const setWidth = (root: HTMLElement, key: string, value: number): void => {
   const element = root.querySelector<HTMLElement>(`[data-bar="${key}"]`);
   if (element) element.style.width = `${Math.max(0, Math.min(100, value))}%`;
 };
+
+const renderFlowOverlay = (message: string): string => {
+  const [title = '', subtitle = '', body = '', prompt = ''] = message.split('\n');
+  return `
+    <div class="flow-panel">
+      <div class="flow-kicker">${escapeHtml(subtitle)}</div>
+      <div class="flow-title">${escapeHtml(title)}</div>
+      <div class="flow-body">${escapeHtml(body)}</div>
+      <div class="flow-prompt">${escapeHtml(prompt)}</div>
+    </div>
+  `;
+};
+
+const escapeHtml = (value: string): string =>
+  value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 
 const setText = (root: HTMLElement, key: string, value: string): void => {
   const element = root.querySelector<HTMLElement>(`[data-value="${key}"]`);

@@ -45,6 +45,7 @@ export class Game {
     ];
     this.scene.scene.add(this.dungeon.group, this.player.mesh, ...this.enemies.map((enemy) => enemy.mesh));
     this.loop = new Loop((delta) => this.update(delta));
+    this.audio.startBgm();
     this.audio.startAmbience();
     this.updateCamera();
   }
@@ -66,7 +67,12 @@ export class Game {
     this.cameraYaw += input.camera.x;
     this.cameraPitch = THREE.MathUtils.clamp(this.cameraPitch + input.camera.y, 0.08, 0.9);
     const previousFlowState = this.flow.state;
-    this.flow.update({ interact: input.interact, playerDead: this.player.fsm.state === 'Dead', bossDead: this.boss.fsm.state === 'Dead' });
+    this.flow.update({
+      advance: input.advance,
+      interact: input.interact,
+      playerDead: this.player.fsm.state === 'Dead',
+      bossDead: this.boss.fsm.state === 'Dead',
+    });
     if (previousFlowState === 'GameOver' && this.flow.state === 'Playing') {
       this.player.respawn(this.dungeon.activeCheckpoint);
       for (const enemy of this.enemies) enemy.respawn();
@@ -126,7 +132,7 @@ export class Game {
         this.audio.playEnemyDefeatRoar();
       }
       if (this.boss.fsm.state === 'Dead') {
-        this.flow.update({ interact: false, playerDead: false, bossDead: true });
+        this.flow.update({ advance: false, interact: false, playerDead: false, bossDead: true });
         this.message = this.flow.message;
       }
     }
@@ -166,6 +172,7 @@ const hasPlayerInteraction = (input: ReturnType<InputManager['update']>): boolea
   input.heal ||
   input.lockOn ||
   input.run ||
+  input.advance ||
   Math.abs(input.move.x) > 0.01 ||
   Math.abs(input.move.y) > 0.01 ||
   Math.abs(input.camera.x) > 0.01 ||

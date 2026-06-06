@@ -13,19 +13,28 @@ export class AudioDirector {
     'death',
     'enemy-defeat-roar',
     'shrine',
+    'bgm',
     'ambience',
   ] as const;
 
   readonly events: string[] = [];
   isAmbienceActive = false;
+  isBgmActive = false;
   private context: AudioContext | null = null;
   private ambience: OscillatorNode | null = null;
   private ambienceGain: GainNode | null = null;
+  private bgmBass: OscillatorNode | null = null;
+  private bgmLead: OscillatorNode | null = null;
+  private bgmGain: GainNode | null = null;
   private time = 0;
 
   play(cueId: AudioCueId): void {
     if (cueId === 'ambience') {
       this.startAmbience();
+      return;
+    }
+    if (cueId === 'bgm') {
+      this.startBgm();
       return;
     }
     this.events.push(cueId);
@@ -98,6 +107,30 @@ export class AudioDirector {
     this.ambienceGain = gain;
   }
 
+  startBgm(): void {
+    if (this.isBgmActive) return;
+    this.events.push('bgm');
+    this.isBgmActive = true;
+    const context = this.getContext();
+    if (!context) return;
+    const bass = context.createOscillator();
+    const lead = context.createOscillator();
+    const gain = context.createGain();
+    bass.type = 'triangle';
+    lead.type = 'sine';
+    bass.frequency.value = 73.42;
+    lead.frequency.value = 146.83;
+    gain.gain.value = 0.13;
+    bass.connect(gain);
+    lead.connect(gain);
+    gain.connect(context.destination);
+    bass.start();
+    lead.start();
+    this.bgmBass = bass;
+    this.bgmLead = lead;
+    this.bgmGain = gain;
+  }
+
   unlock(): void {
     void this.getContext()?.resume();
   }
@@ -107,15 +140,30 @@ export class AudioDirector {
     if (this.ambienceGain) {
       this.ambienceGain.gain.value = 0.065 + Math.sin(this.time * 1.7) * 0.012;
     }
+    if (this.bgmGain) {
+      this.bgmGain.gain.value = 0.12 + Math.sin(this.time * 0.7) * 0.025;
+    }
+    if (this.bgmLead) {
+      this.bgmLead.frequency.value = this.time % 8 < 4 ? 146.83 : 164.81;
+    }
   }
 
   dispose(): void {
     this.ambience?.stop();
     this.ambience?.disconnect();
     this.ambienceGain?.disconnect();
+    this.bgmBass?.stop();
+    this.bgmBass?.disconnect();
+    this.bgmLead?.stop();
+    this.bgmLead?.disconnect();
+    this.bgmGain?.disconnect();
     this.ambience = null;
     this.ambienceGain = null;
+    this.bgmBass = null;
+    this.bgmLead = null;
+    this.bgmGain = null;
     this.isAmbienceActive = false;
+    this.isBgmActive = false;
   }
 
   private playTone(frequency: number, duration: number, type: OscillatorType, volume: number): void {
@@ -235,7 +283,7 @@ const AUDIO_CUES = {
       { frequency: 495, duration: 0.28, type: 'triangle', volume: 0.035 },
     ],
   },
-} satisfies Record<Exclude<AudioCueId, 'ambience'>, SynthCue>;
+} satisfies Record<Exclude<AudioCueId, 'ambience' | 'bgm'>, SynthCue>;
 
 declare global {
   interface Window {

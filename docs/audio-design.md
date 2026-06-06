@@ -17,6 +17,7 @@ Audio feedback must make combat state readable without relying on visuals alone.
 - `death`: enemy defeat or player death emphasis.
 - `enemy-defeat-roar`: enemy defeat vocal/roar emphasis.
 - `shrine`: checkpoint or shrine interaction.
+- `bgm`: continuous tonal music bed that is distinct from ambience.
 - `ambience`: low continuous keep bed.
 
 ## Cue Taxonomy
@@ -25,7 +26,7 @@ Combat cues are grouped by gameplay priority:
 
 - Critical: `hit`, `block`, `enemy-windup`, `enemy-attack`, `boss-cleave-attack`, `boss-lunge-attack`, `death`, `enemy-defeat-roar`.
 - Action confirmation: `attack`, `weapon-whoosh`, `weapon-hit`, `dodge`, `shrine`.
-- World bed: `ambience`, future area loops, future boss loops.
+- World bed: `bgm`, `ambience`, future area loops, future boss loops.
 
 Critical cues must remain audible over ambience. Action confirmation cues should be short and responsive. World bed cues should support mood without hiding combat timing.
 
@@ -42,7 +43,8 @@ Critical cues must remain audible over ambience. Action confirmation cues should
 
 ## Mixing Requirements
 
-- Ambience must sit below combat cues.
+- BGM and ambience must sit below combat cues.
+- BGM should be clearly audible after browser audio unlock while remaining lower than hit, block, and enemy attack cues.
 - Hit, block, and enemy attack cues must be louder or sharper than movement and ambience cues.
 - Boss cues may be louder than minor enemy cues, but must not mask player hit feedback.
 - Short UI or shrine cues should be tonal and distinct from damage cues.
@@ -73,6 +75,6 @@ OpenAI text-to-speech may be used for original voice lines or narration. It shou
 
 - Each required cue has a named method or data entry that can be tested.
 - Critical combat cues are distinguishable by event name and by sound design intent.
-- Ambience starts once and can be disposed cleanly.
+- BGM and ambience start once and can be disposed cleanly.
 - Audio docs and credits are updated in the same task when file-based audio is added.
 - No third-party audio is committed without license and source records.

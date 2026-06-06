@@ -40,6 +40,7 @@ export class TouchInput implements InputProvider {
     next.heal = this.activeButtons.has('heal');
     next.lockOn = this.activeButtons.has('lockOn');
     next.interact = this.activeButtons.has('interact');
+    next.advance = this.activeButtons.size > 0 || this.movePointer !== null || this.cameraPointer !== null;
     this.state.camera = { x: 0, y: 0 };
     return next;
   }

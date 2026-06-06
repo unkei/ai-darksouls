@@ -38,4 +38,27 @@ describe('Scene visibility', () => {
     expect(faded.length).toBeGreaterThan(0);
     expect(faded.length).toBeLessThan(dungeon.obstructionMeshes.length);
   });
+
+  it('restores faded blockers after the camera sightline clears', () => {
+    const dungeon = new Dungeon();
+    const camera = new THREE.PerspectiveCamera();
+    camera.position.set(0, 1.5, -28);
+    const blockedTarget = new THREE.Vector3(0, 0.7, -22);
+
+    dungeon.updateObstructionFading(camera, blockedTarget);
+    expect(
+      dungeon.obstructionMeshes.some((mesh) => mesh.material instanceof THREE.MeshStandardMaterial && mesh.material.opacity < 1),
+    ).toBe(true);
+
+    camera.position.set(0, 4, 2);
+    const clearTarget = new THREE.Vector3(0, 0.7, 2.5);
+    dungeon.updateObstructionFading(camera, clearTarget);
+
+    for (const mesh of dungeon.obstructionMeshes) {
+      expect(mesh.material).toBeInstanceOf(THREE.MeshStandardMaterial);
+      const material = mesh.material as THREE.MeshStandardMaterial;
+      expect(material.opacity).toBe(1);
+      expect(material.depthWrite).toBe(true);
+    }
+  });
 });

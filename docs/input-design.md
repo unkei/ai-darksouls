@@ -4,6 +4,10 @@ All devices write to the same `InputState`. Raw device events never drive game l
 
 Movement axes use one shared convention across devices: negative `move.x` means left, positive `move.x` means right, positive `move.y` means forward, and negative `move.y` means backward. Device-specific browser/API axis quirks must be fixed inside the provider, not in player movement.
 
+Player locomotion converts the shared input convention into camera-relative screen space. With the current chase camera, screen-right movement maps to the camera's right side even though that is negative world X when `cameraYaw` is `0`.
+
+All providers also expose `advance` for non-gameplay flow screens. Any held keyboard key, mouse/pointer button, gamepad button, touch button, or active touch stick/camera pointer may advance opening, retry, clear, and ending presentation states.
+
 ## Keyboard and Mouse
 
 - `WASD`: movement.

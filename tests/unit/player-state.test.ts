@@ -25,6 +25,28 @@ describe('Player state machine', () => {
     expect(player.fsm.state).not.toBe('Dodge');
   });
 
+  it('moves screen-right input toward camera-right world space', () => {
+    const player = new Player();
+    const input = createInputState();
+    input.move.x = 1;
+
+    player.update(1, input, 0);
+
+    expect(player.position.x).toBeLessThan(0);
+  });
+
+  it('dodges screen-left input toward camera-left world space', () => {
+    const player = new Player();
+    const input = createInputState();
+    input.move.x = -1;
+    input.dodge = true;
+
+    player.update(0.016, input, 0);
+    player.update(0.05, createInputState(), 0);
+
+    expect(player.position.x).toBeGreaterThan(0);
+  });
+
   it('guards damage with reduced HP loss', () => {
     const player = new Player();
     const input = createInputState();
