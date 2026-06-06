@@ -5,6 +5,7 @@ This repository is developed by Codex agents. Follow these rules for every task:
 - Create a task branch before changing files.
 - Do not commit directly to `main` or `trunk`.
 - Register every task mentioned in the current conversation and every new task as a GitHub issue before starting implementation, then execute the work by following the corresponding issue.
+- Link each task PR to its corresponding issue with `Resolves #...`, `Refs #...`, or `Related to #...`; a PR may resolve multiple related issues when the implementation is naturally shared.
 - At the start of every task, before implementation edits, run `git fetch origin` and merge `origin/main` into the task branch. Resolve any conflicts and run the relevant tests before continuing.
 - Commit at meaningful step boundaries.
 - Create a Draft PR early.
@@ -22,5 +23,6 @@ This repository is developed by Codex agents. Follow these rules for every task:
 - Centralize gameplay constants where practical.
 - Prefer Three.js official APIs and avoid dependencies unless the design document explains why.
 - When behavior changes, update docs and tests in the same task step.
+- Follow the reusable development process in `docs/development-process.md` and keep project-specific specs separate from reusable guidance.
 
 Current task branch: `codex/dark-souls-mvp`.

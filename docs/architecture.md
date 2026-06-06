@@ -1,6 +1,8 @@
 # Architecture
 
-## Stack
+This is the Hollow Keep project architecture. Reusable development-process guidance belongs in [Development Process](development-process.md), and reusable game-specification structure belongs in [Game Specification Guide](game-specification-guide.md).
+
+## Project Stack
 
 - Vite for local development and build.
 - TypeScript for strict game logic.
