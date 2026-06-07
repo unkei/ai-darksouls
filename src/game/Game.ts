@@ -32,6 +32,7 @@ export class Game {
   private message = 'Explore the keep. Open the shortcut. Defeat the warden.';
   private encounterPhase: 'Minor' | 'Boss' = 'Minor';
   private endingTime = 0;
+  private bossDefeatTime = 0;
 
   constructor(private readonly root: HTMLElement) {
     this.root.className = 'game-root';
@@ -49,6 +50,10 @@ export class Game {
     this.loop = new Loop((delta) => this.update(delta));
     this.audio.startBgm();
     this.audio.startAmbience();
+    if (new URLSearchParams(window.location.search).get('e2eFlow') === 'ending') {
+      this.flow.forceStateForTest('Ending');
+      this.endingTime = 0;
+    }
     this.updateCamera();
   }
 
@@ -75,6 +80,7 @@ export class Game {
       playerDead: this.player.fsm.state === 'Dead',
       bossDead: this.boss.fsm.state === 'Dead',
     });
+    if (previousFlowState !== 'BossDefeat' && this.flow.state === 'BossDefeat') this.bossDefeatTime = 0;
     if (previousFlowState !== 'Ending' && this.flow.state === 'Ending') this.endingTime = 0;
     if (previousFlowState === 'GameOver' && this.flow.state === 'Playing') {
       this.player.respawn(this.dungeon.activeCheckpoint);
@@ -100,6 +106,14 @@ export class Game {
       if (!this.deathHandled) {
         this.deathHandled = true;
         this.dungeon.dropEchoes(this.player);
+        this.message = this.flow.message;
+      }
+    } else if (this.flow.state === 'BossDefeat') {
+      this.bossDefeatTime += delta;
+      this.boss.updateDefeatPresentation(delta);
+      this.message = this.flow.message;
+      if (this.bossDefeatTime >= 3.2) {
+        this.flow.update({ advance: false, interact: false, playerDead: false, bossDead: true, bossDefeatComplete: true });
         this.message = this.flow.message;
       }
     } else if (this.flow.state === 'Clear') {

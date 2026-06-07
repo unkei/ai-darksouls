@@ -72,6 +72,7 @@ The player must be able to identify action state, threat direction, and active d
 - Each boss pattern needs a unique windup pose, a unique audio cue, or both.
 - Longer-range boss attacks must show more spatial information than short melee attacks.
 - Phase or pattern changes must have a visible transition instead of silently changing timing.
+- Boss defeat must stay visible long enough for the player to understand the kill: the boss remains on screen, collapses, and emits a defeat ring/ash burst before the clear prompt appears.
 
 ### Camera, Lighting, And Environment
 

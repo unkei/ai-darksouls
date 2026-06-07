@@ -215,10 +215,10 @@ canvas {
 .credits-roll {
   position: absolute;
   left: 50%;
-  top: 100%;
+  top: 72%;
   width: min(620px, 84vw);
   transform: translateX(-50%);
-  animation: credits-scroll 24s linear forwards;
+  animation: credits-scroll 28s linear forwards;
 }
 
 .credits-title {
@@ -241,7 +241,7 @@ canvas {
   }
 
   to {
-    transform: translate(-50%, -148%);
+    transform: translate(-50%, -122%);
   }
 }
 

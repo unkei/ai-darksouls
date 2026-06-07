@@ -76,5 +76,6 @@ OpenAI text-to-speech may be used for original voice lines or narration. It shou
 - Each required cue has a named method or data entry that can be tested.
 - Critical combat cues are distinguishable by event name and by sound design intent.
 - BGM and ambience start once and can be disposed cleanly.
+- Browser tests should verify synthesized BGM through AudioContext instrumentation: oscillator starts, gain levels, and resume calls are the testable contract because automated E2E cannot judge perceived loudness directly.
 - Audio docs and credits are updated in the same task when file-based audio is added.
 - No third-party audio is committed without license and source records.

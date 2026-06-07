@@ -94,4 +94,17 @@ describe('Enemy visuals', () => {
     expect(boss.mesh.getObjectByName('boss-pattern-marker')?.visible).toBe(true);
     expect(boss.mesh.getObjectByName('boss-pattern-marker')?.scale.x).toBeGreaterThan(1.1);
   });
+
+  it('keeps the boss visible for a defeat animation after lethal damage', () => {
+    const boss = new Boss({ x: 0, y: 0, z: 0 });
+
+    boss.takeDamage(boss.hp);
+    boss.updateDefeatPresentation(1.2);
+
+    expect(boss.fsm.state).toBe('Dead');
+    expect(boss.mesh.visible).toBe(true);
+    expect(boss.mesh.getObjectByName('boss-defeat-ring')?.visible).toBe(true);
+    expect(boss.mesh.getObjectByName('boss-ash-burst')?.visible).toBe(true);
+    expect(boss.mesh.scale.y).toBeLessThan(1.65);
+  });
 });

@@ -73,6 +73,7 @@ Enemies use telegraph, active, and recovery windows. Attacks should be readable 
 - `Opening`: title/start presentation. Interact enters gameplay.
 - `Playing`: normal exploration and combat.
 - `GameOver`: entered on player death. Interact retries from the active cinder shrine.
+- `BossDefeat`: entered when the Ashen Warden reaches zero HP. Input does not advance this state; the boss collapse animation must finish first.
 - `Clear`: entered when the Ashen Warden is defeated. Interact advances to the ending.
 - `Ending`: staff roll presentation with a slow arena orbit camera. Credits include `unno`, and the presentation ends on a visible `The End` hold so it does not read as a hang.
 

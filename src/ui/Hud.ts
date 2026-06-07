@@ -4,6 +4,7 @@ import { GameFlowState } from '../game/GameFlow';
 
 export class Hud {
   readonly root: HTMLElement;
+  private overlayRenderKey = '';
 
   constructor(parent: HTMLElement) {
     this.root = document.createElement('div');
@@ -46,7 +47,13 @@ export class Hud {
     if (overlay) {
       overlay.hidden = flowState === 'Playing';
       overlay.dataset.flowState = flowState;
-      overlay.innerHTML = flowState === 'Playing' ? '' : renderFlowOverlay(message, flowState);
+      const nextOverlayRenderKey = `${flowState}:${message}`;
+      if (flowState === 'Playing') {
+        if (this.overlayRenderKey !== nextOverlayRenderKey) overlay.innerHTML = '';
+      } else if (this.overlayRenderKey !== nextOverlayRenderKey) {
+        overlay.innerHTML = renderFlowOverlay(message, flowState);
+      }
+      this.overlayRenderKey = nextOverlayRenderKey;
     }
     const bossPanel = this.root.querySelector<HTMLElement>('.boss');
     if (bossPanel) bossPanel.hidden = boss.fsm.state === 'Dead' || boss.fsm.state === 'Idle';
