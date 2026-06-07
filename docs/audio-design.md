@@ -58,7 +58,7 @@ Critical cues must remain audible over ambience. Action confirmation cues should
 
 ## Runtime Direction
 
-The current implementation uses Web Audio synthesis so the project has audible feedback without third-party files. `AudioDirector.requiredCueIds` and the cue map define the file-ready cue taxonomy while preserving synthesized fallback layers. Synthesized cues should be louder and more distinct than the previous test tones, but short enough to avoid masking combat timing.
+The current implementation uses Web Audio synthesis so the project has audible feedback without third-party files. BGM files do not need to be supplied for the current prototype. `AudioDirector.requiredCueIds`, `AudioDirector.generatedMusic`, and the cue map define the file-ready cue taxonomy while preserving synthesized fallback layers. Synthesized BGM uses multiple oscillator layers and resumes after browser audio unlock; it should be clearly audible after the first player interaction while staying below combat cues.
 
 When adding file-based audio:
 
@@ -76,5 +76,6 @@ OpenAI text-to-speech may be used for original voice lines or narration. It shou
 - Each required cue has a named method or data entry that can be tested.
 - Critical combat cues are distinguishable by event name and by sound design intent.
 - BGM and ambience start once and can be disposed cleanly.
+- Browser tests should verify synthesized BGM through AudioContext instrumentation: oscillator starts, gain levels, and resume calls are the testable contract because automated E2E cannot judge perceived loudness directly.
 - Audio docs and credits are updated in the same task when file-based audio is added.
 - No third-party audio is committed without license and source records.

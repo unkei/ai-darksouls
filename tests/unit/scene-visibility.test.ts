@@ -31,6 +31,14 @@ describe('Scene visibility', () => {
     expect(dungeon.group.getObjectByName('open-sky-gap')).toBeTruthy();
   });
 
+  it('exposes larger playable bounds for an expanded keep', () => {
+    const dungeon = new Dungeon();
+
+    expect(dungeon.playableBounds.maxX - dungeon.playableBounds.minX).toBeGreaterThanOrEqual(24);
+    expect(dungeon.playableBounds.maxZ - dungeon.playableBounds.minZ).toBeGreaterThanOrEqual(42);
+    expect(dungeon.group.getObjectByName('upper-bailey-floor')).toBeTruthy();
+  });
+
   it('fades only dungeon blockers between the camera and player', () => {
     const dungeon = new Dungeon();
     const camera = new THREE.PerspectiveCamera();
@@ -46,6 +54,19 @@ describe('Scene visibility', () => {
 
     expect(faded.length).toBeGreaterThan(0);
     expect(faded.length).toBeLessThan(dungeon.obstructionMeshes.length);
+  });
+
+  it('fades blockers that cover nearby camera sightlines around the player', () => {
+    const dungeon = new Dungeon();
+    const camera = new THREE.PerspectiveCamera();
+    camera.position.set(-7.8, 1.6, -8);
+    const target = new THREE.Vector3(-4.2, 0.7, -8);
+
+    dungeon.updateObstructionFading(camera, target);
+
+    expect(
+      dungeon.obstructionMeshes.some((mesh) => mesh.material instanceof THREE.MeshStandardMaterial && mesh.material.opacity < 1),
+    ).toBe(true);
   });
 
   it('restores faded blockers after the camera sightline clears', () => {

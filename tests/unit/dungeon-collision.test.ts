@@ -17,7 +17,7 @@ describe('Dungeon collision', () => {
   it('prevents dodge movement from ending inside the outer wall', () => {
     const dungeon = new Dungeon();
     const player = new Player();
-    player.position = { x: 8.8, y: 0, z: 0 };
+    player.position = { x: 11.8, y: 0, z: 0 };
     const input = createInputState();
     input.dodge = true;
     input.move.x = 1;
@@ -26,7 +26,7 @@ describe('Dungeon collision', () => {
     player.update(0.1, createInputState(), 0);
     dungeon.update(player, false);
 
-    expect(player.position.x).toBeLessThanOrEqual(8.45);
+    expect(player.position.x).toBeLessThanOrEqual(11.45);
   });
 
   it('pushes the player out of pillar collision', () => {

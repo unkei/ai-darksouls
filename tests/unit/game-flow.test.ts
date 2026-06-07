@@ -22,6 +22,13 @@ describe('GameFlow', () => {
     expect(flow.state).toBe('Playing');
 
     flow.update({ advance: false, interact: false, playerDead: false, bossDead: true });
+    expect(flow.state).toBe('BossDefeat');
+    expect(flow.message).toContain('ASHEN WARDEN FALLS');
+
+    flow.update({ advance: true, interact: false, playerDead: false, bossDead: true });
+    expect(flow.state).toBe('BossDefeat');
+
+    flow.update({ advance: false, interact: false, playerDead: false, bossDead: true, bossDefeatComplete: true });
     expect(flow.state).toBe('Clear');
 
     flow.update({ advance: true, interact: false, playerDead: false, bossDead: true });
@@ -41,6 +48,9 @@ describe('GameFlow', () => {
 
     flow.update({ advance: true, interact: false, playerDead: true, bossDead: false });
     flow.update({ advance: false, interact: false, playerDead: false, bossDead: true });
+    expect(flow.message).toContain('ASHEN WARDEN FALLS');
+
+    flow.update({ advance: false, interact: false, playerDead: false, bossDead: true, bossDefeatComplete: true });
     expect(flow.message).toContain('WARDEN VANQUISHED');
   });
 });

@@ -16,6 +16,11 @@ export class AudioDirector {
     'bgm',
     'ambience',
   ] as const;
+  static readonly generatedMusic = {
+    requiresExternalFile: false,
+    baseGain: 0.24,
+    layers: ['bass-drone', 'low-fifth', 'lead-pulse'] as const,
+  };
 
   readonly events: string[] = [];
   isAmbienceActive = false;
@@ -24,6 +29,7 @@ export class AudioDirector {
   private ambience: OscillatorNode | null = null;
   private ambienceGain: GainNode | null = null;
   private bgmBass: OscillatorNode | null = null;
+  private bgmFifth: OscillatorNode | null = null;
   private bgmLead: OscillatorNode | null = null;
   private bgmGain: GainNode | null = null;
   private time = 0;
@@ -114,25 +120,34 @@ export class AudioDirector {
     const context = this.getContext();
     if (!context) return;
     const bass = context.createOscillator();
+    const fifth = context.createOscillator();
     const lead = context.createOscillator();
     const gain = context.createGain();
     bass.type = 'triangle';
+    fifth.type = 'sine';
     lead.type = 'sine';
     bass.frequency.value = 73.42;
+    fifth.frequency.value = 110;
     lead.frequency.value = 146.83;
-    gain.gain.value = 0.13;
+    gain.gain.value = AudioDirector.generatedMusic.baseGain;
     bass.connect(gain);
+    fifth.connect(gain);
     lead.connect(gain);
     gain.connect(context.destination);
     bass.start();
+    fifth.start();
     lead.start();
     this.bgmBass = bass;
+    this.bgmFifth = fifth;
     this.bgmLead = lead;
     this.bgmGain = gain;
   }
 
   unlock(): void {
-    void this.getContext()?.resume();
+    const context = this.getContext();
+    void context?.resume();
+    if (!this.isBgmActive) this.startBgm();
+    if (!this.isAmbienceActive) this.startAmbience();
   }
 
   update(delta: number): void {
@@ -141,10 +156,13 @@ export class AudioDirector {
       this.ambienceGain.gain.value = 0.065 + Math.sin(this.time * 1.7) * 0.012;
     }
     if (this.bgmGain) {
-      this.bgmGain.gain.value = 0.12 + Math.sin(this.time * 0.7) * 0.025;
+      this.bgmGain.gain.value = AudioDirector.generatedMusic.baseGain + Math.sin(this.time * 0.7) * 0.035;
     }
     if (this.bgmLead) {
       this.bgmLead.frequency.value = this.time % 8 < 4 ? 146.83 : 164.81;
+    }
+    if (this.bgmFifth) {
+      this.bgmFifth.frequency.value = this.time % 12 < 6 ? 110 : 98;
     }
   }
 
@@ -154,12 +172,15 @@ export class AudioDirector {
     this.ambienceGain?.disconnect();
     this.bgmBass?.stop();
     this.bgmBass?.disconnect();
+    this.bgmFifth?.stop();
+    this.bgmFifth?.disconnect();
     this.bgmLead?.stop();
     this.bgmLead?.disconnect();
     this.bgmGain?.disconnect();
     this.ambience = null;
     this.ambienceGain = null;
     this.bgmBass = null;
+    this.bgmFifth = null;
     this.bgmLead = null;
     this.bgmGain = null;
     this.isAmbienceActive = false;

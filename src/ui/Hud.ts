@@ -4,6 +4,7 @@ import { GameFlowState } from '../game/GameFlow';
 
 export class Hud {
   readonly root: HTMLElement;
+  private overlayRenderKey = '';
 
   constructor(parent: HTMLElement) {
     this.root = document.createElement('div');
@@ -44,9 +45,16 @@ export class Hud {
     setText(this.root, 'encounter', encounterPhase === 'Boss' ? 'Boss: Ashen Warden' : 'Lesser Foes');
     const overlay = this.root.querySelector<HTMLElement>('[data-value="flow-overlay"]');
     if (overlay) {
-      overlay.hidden = flowState === 'Playing';
+      const usesFullOverlay = flowState !== 'Playing' && flowState !== 'BossDefeat';
+      overlay.hidden = !usesFullOverlay;
       overlay.dataset.flowState = flowState;
-      overlay.innerHTML = flowState === 'Playing' ? '' : renderFlowOverlay(message, flowState);
+      const nextOverlayRenderKey = `${flowState}:${message}`;
+      if (!usesFullOverlay) {
+        if (this.overlayRenderKey !== nextOverlayRenderKey) overlay.innerHTML = '';
+      } else if (this.overlayRenderKey !== nextOverlayRenderKey) {
+        overlay.innerHTML = renderFlowOverlay(message, flowState);
+      }
+      this.overlayRenderKey = nextOverlayRenderKey;
     }
     const bossPanel = this.root.querySelector<HTMLElement>('.boss');
     if (bossPanel) bossPanel.hidden = boss.fsm.state === 'Dead' || boss.fsm.state === 'Idle';
@@ -79,6 +87,7 @@ const renderCreditsRoll = (message: string): string => {
   const [title = '', ...lines] = message.split('\n');
   return `
     <div class="credits-window">
+      <div class="ending-hold">The End</div>
       <div class="credits-roll">
         <div class="credits-title">${escapeHtml(title)}</div>
         ${lines.map((line) => `<div class="credits-line">${escapeHtml(line)}</div>`).join('')}

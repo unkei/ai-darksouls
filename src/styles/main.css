@@ -201,13 +201,24 @@ canvas {
   overflow: hidden;
 }
 
+.ending-hold {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: rgb(255 241 200 / 0%);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(32px, 6vw, 68px);
+  animation: ending-hold 24s linear forwards;
+}
+
 .credits-roll {
   position: absolute;
   left: 50%;
-  bottom: -62%;
+  top: 72%;
   width: min(620px, 84vw);
   transform: translateX(-50%);
-  animation: credits-scroll 18s linear infinite;
+  animation: credits-scroll 28s linear forwards;
 }
 
 .credits-title {
@@ -230,7 +241,23 @@ canvas {
   }
 
   to {
-    transform: translate(-50%, -220%);
+    transform: translate(-50%, -122%);
+  }
+}
+
+@keyframes ending-hold {
+  0%,
+  72% {
+    color: rgb(255 241 200 / 0%);
+    text-shadow: none;
+  }
+
+  86%,
+  100% {
+    color: rgb(255 241 200 / 86%);
+    text-shadow:
+      0 2px 8px #000,
+      0 0 24px rgb(215 157 75 / 30%);
   }
 }
 
