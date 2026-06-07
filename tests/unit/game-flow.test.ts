@@ -18,6 +18,9 @@ describe('GameFlow', () => {
     flow.update({ advance: false, interact: false, playerDead: true, bossDead: false });
     expect(flow.state).toBe('GameOver');
 
+    flow.update({ advance: false, interact: false, playerDead: true, bossDead: false });
+    expect(flow.state).toBe('GameOver');
+
     flow.update({ advance: true, interact: false, playerDead: true, bossDead: false });
     expect(flow.state).toBe('Playing');
 
@@ -52,5 +55,22 @@ describe('GameFlow', () => {
 
     flow.update({ advance: false, interact: false, playerDead: false, bossDead: true, bossDefeatComplete: true });
     expect(flow.message).toContain('WARDEN VANQUISHED');
+  });
+
+  it('requires a fresh advance input after entering game over', () => {
+    const flow = new GameFlow();
+    flow.update({ advance: true, interact: false, playerDead: false, bossDead: false });
+
+    flow.update({ advance: true, interact: false, playerDead: true, bossDead: false });
+    expect(flow.state).toBe('GameOver');
+
+    flow.update({ advance: true, interact: false, playerDead: true, bossDead: false });
+    expect(flow.state).toBe('GameOver');
+
+    flow.update({ advance: false, interact: false, playerDead: true, bossDead: false });
+    expect(flow.state).toBe('GameOver');
+
+    flow.update({ advance: true, interact: false, playerDead: true, bossDead: false });
+    expect(flow.state).toBe('Playing');
   });
 });
