@@ -77,9 +77,11 @@ export class Game {
     this.flow.update({
       advance: input.advance,
       interact: input.interact,
+      delta,
       playerDead: this.player.fsm.state === 'Dead',
       bossDead: this.boss.fsm.state === 'Dead',
     });
+    if (previousFlowState !== 'Opening' && this.flow.state === 'Opening') this.resetRunForTitle();
     if (previousFlowState !== 'BossDefeat' && this.flow.state === 'BossDefeat') this.bossDefeatTime = 0;
     if (previousFlowState !== 'Ending' && this.flow.state === 'Ending') this.endingTime = 0;
     if (previousFlowState === 'GameOver' && this.flow.state === 'Playing') {
@@ -179,6 +181,16 @@ export class Game {
     this.hud.update(this.player, this.boss, this.message, this.flow.state, this.encounterPhase);
     this.audio.update(delta);
     this.scene.render(delta);
+  }
+
+  private resetRunForTitle(): void {
+    this.player.respawn(this.dungeon.activeCheckpoint);
+    for (const enemy of this.enemies) enemy.respawn();
+    this.deathHandled = false;
+    this.message = 'Explore the keep. Open the shortcut. Defeat the warden.';
+    this.encounterPhase = this.player.position.z < -25 ? 'Boss' : 'Minor';
+    this.bossDefeatTime = 0;
+    this.endingTime = 0;
   }
 
   private updateCamera(): void {

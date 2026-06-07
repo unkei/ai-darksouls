@@ -4,18 +4,26 @@ export type GameFlowState = 'Opening' | 'Playing' | 'GameOver' | 'BossDefeat' | 
 
 export type GameFlowUpdate = Pick<InputState, 'interact'> & {
   advance?: boolean;
+  delta?: number;
   playerDead: boolean;
   bossDead: boolean;
   bossDefeatComplete?: boolean;
 };
 
+export const GAME_OVER_TITLE_RETURN_SECONDS = 8;
+export const ENDING_TITLE_RETURN_SECONDS = 36;
+
 export class GameFlow {
   state: GameFlowState = 'Opening';
   private gameOverRequiresAdvanceRelease = false;
+  private openingRequiresAdvanceRelease = false;
+  private stateElapsed = 0;
 
   forceStateForTest(state: GameFlowState): void {
     this.state = state;
     this.gameOverRequiresAdvanceRelease = false;
+    this.openingRequiresAdvanceRelease = false;
+    this.stateElapsed = 0;
   }
 
   get message(): string {
@@ -37,32 +45,57 @@ export class GameFlow {
   }
 
   update(update: GameFlowUpdate): void {
+    this.stateElapsed += update.delta ?? 0;
     const advance = update.advance || update.interact;
     if (this.state === 'Opening') {
-      if (advance) this.state = 'Playing';
+      if (!advance) {
+        this.openingRequiresAdvanceRelease = false;
+        return;
+      }
+      if (!this.openingRequiresAdvanceRelease) this.transitionTo('Playing');
       return;
     }
     if (this.state === 'Playing') {
       if (update.playerDead) {
-        this.state = 'GameOver';
+        this.transitionTo('GameOver');
         this.gameOverRequiresAdvanceRelease = Boolean(advance);
-      } else if (update.bossDead) this.state = 'BossDefeat';
+      } else if (update.bossDead) this.transitionTo('BossDefeat');
       return;
     }
     if (this.state === 'BossDefeat') {
-      if (update.bossDefeatComplete) this.state = 'Clear';
+      if (update.bossDefeatComplete) this.transitionTo('Clear');
       return;
     }
     if (this.state === 'GameOver') {
+      if (this.stateElapsed >= GAME_OVER_TITLE_RETURN_SECONDS) {
+        this.returnToOpeningAfterTimeout(advance);
+        return;
+      }
       if (!advance) {
         this.gameOverRequiresAdvanceRelease = false;
         return;
       }
-      if (!this.gameOverRequiresAdvanceRelease) this.state = 'Playing';
+      if (!this.gameOverRequiresAdvanceRelease) this.transitionTo('Playing');
       return;
     }
     if (this.state === 'Clear' && advance) {
-      this.state = 'Ending';
+      this.transitionTo('Ending');
+      return;
     }
+    if (this.state === 'Ending' && this.stateElapsed >= ENDING_TITLE_RETURN_SECONDS) {
+      this.returnToOpeningAfterTimeout(advance);
+    }
+  }
+
+  private transitionTo(state: GameFlowState): void {
+    this.state = state;
+    this.stateElapsed = 0;
+    if (state !== 'GameOver') this.gameOverRequiresAdvanceRelease = false;
+    if (state !== 'Opening') this.openingRequiresAdvanceRelease = false;
+  }
+
+  private returnToOpeningAfterTimeout(advanceHeld: boolean): void {
+    this.transitionTo('Opening');
+    this.openingRequiresAdvanceRelease = advanceHeld;
   }
 }
