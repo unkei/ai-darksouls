@@ -101,8 +101,8 @@ export class TouchInput implements InputProvider {
     const button = target.closest('button') as HTMLButtonElement | null;
     const pointerAction = this.buttonPointers.get(event.pointerId);
     if (pointerAction) {
-      this.activeButtons.delete(pointerAction);
       this.buttonPointers.delete(event.pointerId);
+      this.syncActiveButtons();
     } else if (button?.dataset.action) {
       this.activeButtons.delete(button.dataset.action);
     }
@@ -116,4 +116,9 @@ export class TouchInput implements InputProvider {
   private readonly preventBrowserTouchGesture = (event: Event): void => {
     if (event.cancelable) event.preventDefault();
   };
+
+  private syncActiveButtons(): void {
+    this.activeButtons.clear();
+    for (const action of this.buttonPointers.values()) this.activeButtons.add(action);
+  }
 }
