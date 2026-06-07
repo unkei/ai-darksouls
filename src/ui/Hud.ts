@@ -45,10 +45,11 @@ export class Hud {
     setText(this.root, 'encounter', encounterPhase === 'Boss' ? 'Boss: Ashen Warden' : 'Lesser Foes');
     const overlay = this.root.querySelector<HTMLElement>('[data-value="flow-overlay"]');
     if (overlay) {
-      overlay.hidden = flowState === 'Playing';
+      const usesFullOverlay = flowState !== 'Playing' && flowState !== 'BossDefeat';
+      overlay.hidden = !usesFullOverlay;
       overlay.dataset.flowState = flowState;
       const nextOverlayRenderKey = `${flowState}:${message}`;
-      if (flowState === 'Playing') {
+      if (!usesFullOverlay) {
         if (this.overlayRenderKey !== nextOverlayRenderKey) overlay.innerHTML = '';
       } else if (this.overlayRenderKey !== nextOverlayRenderKey) {
         overlay.innerHTML = renderFlowOverlay(message, flowState);
