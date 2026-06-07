@@ -6,7 +6,7 @@ Movement axes use one shared convention across devices: negative `move.x` means 
 
 Player locomotion converts the shared input convention into camera-relative screen space. With the current chase camera, screen-right movement maps to the camera's right side even though that is negative world X when `cameraYaw` is `0`.
 
-All providers also expose `advance` for non-gameplay flow screens. Any held keyboard key, mouse/pointer button, gamepad button, touch button, or active touch stick/camera pointer may advance opening, retry, clear, and ending presentation states.
+All providers also expose `advance` for non-gameplay flow screens. Any held keyboard key, mouse/pointer button, gamepad button, touch button, or active touch stick/camera pointer may advance opening, clear, and ending presentation states. Retry after game over requires a fresh advance input after all advance inputs have been released, so an attack held through the death transition cannot immediately restart the run.
 
 ## Keyboard and Mouse
 
@@ -44,6 +44,6 @@ Mobile controls use transparent fixed-position HTML:
 
 Touch controls are visible on small/coarse-pointer viewports and hidden on desktop pointer devices.
 
-iOS Safari double-tap zoom is disabled for gameplay. The viewport locks maximum scale and root styles use `touch-action: manipulation` while the canvas and touch controls keep direct pointer handling with `touch-action: none`.
+iOS Safari double-tap zoom is disabled for gameplay. The viewport locks maximum scale and root styles use `touch-action: manipulation` while the canvas and touch controls keep direct pointer handling with `touch-action: none`. Touch controls also cancel touch and gesture events so repeated attack taps are not interpreted as browser zoom gestures.
 
 MVP does not implement remapping, but action names are stable so remapping can be added later.

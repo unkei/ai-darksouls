@@ -11,9 +11,11 @@ export type GameFlowUpdate = Pick<InputState, 'interact'> & {
 
 export class GameFlow {
   state: GameFlowState = 'Opening';
+  private gameOverRequiresAdvanceRelease = false;
 
   forceStateForTest(state: GameFlowState): void {
     this.state = state;
+    this.gameOverRequiresAdvanceRelease = false;
   }
 
   get message(): string {
@@ -41,8 +43,10 @@ export class GameFlow {
       return;
     }
     if (this.state === 'Playing') {
-      if (update.playerDead) this.state = 'GameOver';
-      else if (update.bossDead) this.state = 'BossDefeat';
+      if (update.playerDead) {
+        this.state = 'GameOver';
+        this.gameOverRequiresAdvanceRelease = Boolean(advance);
+      } else if (update.bossDead) this.state = 'BossDefeat';
       return;
     }
     if (this.state === 'BossDefeat') {
@@ -50,7 +54,11 @@ export class GameFlow {
       return;
     }
     if (this.state === 'GameOver') {
-      if (advance) this.state = 'Playing';
+      if (!advance) {
+        this.gameOverRequiresAdvanceRelease = false;
+        return;
+      }
+      if (!this.gameOverRequiresAdvanceRelease) this.state = 'Playing';
       return;
     }
     if (this.state === 'Clear' && advance) {

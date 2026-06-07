@@ -17,12 +17,12 @@ export class TouchInput implements InputProvider {
       <div class="touch-stick" data-zone="move"><span></span></div>
       <div class="touch-camera" data-zone="camera"></div>
       <div class="touch-buttons">
-        <button data-action="attack">ATK</button>
-        <button data-action="dodge">ROLL</button>
-        <button data-action="guard">GRD</button>
-        <button data-action="heal">HEAL</button>
-        <button data-action="lockOn">LOCK</button>
-        <button data-action="interact">USE</button>
+        <button type="button" data-action="attack">ATK</button>
+        <button type="button" data-action="dodge">ROLL</button>
+        <button type="button" data-action="guard">GRD</button>
+        <button type="button" data-action="heal">HEAL</button>
+        <button type="button" data-action="lockOn">LOCK</button>
+        <button type="button" data-action="interact">USE</button>
       </div>
     `;
     parent.appendChild(this.root);
@@ -30,6 +30,10 @@ export class TouchInput implements InputProvider {
     this.root.addEventListener('pointermove', this.onPointerMove);
     this.root.addEventListener('pointerup', this.onPointerUp);
     this.root.addEventListener('pointercancel', this.onPointerUp);
+    this.root.addEventListener('touchstart', this.preventBrowserTouchGesture, { passive: false });
+    this.root.addEventListener('touchmove', this.preventBrowserTouchGesture, { passive: false });
+    this.root.addEventListener('touchend', this.preventBrowserTouchGesture, { passive: false });
+    this.root.addEventListener('gesturestart', this.preventBrowserTouchGesture);
   }
 
   update(): InputState {
@@ -50,10 +54,15 @@ export class TouchInput implements InputProvider {
     this.root.removeEventListener('pointermove', this.onPointerMove);
     this.root.removeEventListener('pointerup', this.onPointerUp);
     this.root.removeEventListener('pointercancel', this.onPointerUp);
+    this.root.removeEventListener('touchstart', this.preventBrowserTouchGesture);
+    this.root.removeEventListener('touchmove', this.preventBrowserTouchGesture);
+    this.root.removeEventListener('touchend', this.preventBrowserTouchGesture);
+    this.root.removeEventListener('gesturestart', this.preventBrowserTouchGesture);
     this.root.remove();
   }
 
   private readonly onPointerDown = (event: PointerEvent): void => {
+    event.preventDefault();
     const target = event.target as HTMLElement;
     const button = target.closest('button') as HTMLButtonElement | null;
     const zone = (target.closest('[data-zone]') as HTMLElement | null)?.dataset.zone;
@@ -70,6 +79,7 @@ export class TouchInput implements InputProvider {
   };
 
   private readonly onPointerMove = (event: PointerEvent): void => {
+    event.preventDefault();
     if (event.pointerId === this.movePointer) {
       this.state.move.x = Math.max(-1, Math.min(1, (event.clientX - this.moveOrigin.x) / 55));
       this.state.move.y = Math.max(-1, Math.min(1, -(event.clientY - this.moveOrigin.y) / 55));
@@ -82,6 +92,7 @@ export class TouchInput implements InputProvider {
   };
 
   private readonly onPointerUp = (event: PointerEvent): void => {
+    event.preventDefault();
     const target = event.target as HTMLElement;
     const button = target.closest('button') as HTMLButtonElement | null;
     if (button?.dataset.action) this.activeButtons.delete(button.dataset.action);
@@ -90,5 +101,9 @@ export class TouchInput implements InputProvider {
       this.state.move = { x: 0, y: 0 };
     }
     if (event.pointerId === this.cameraPointer) this.cameraPointer = null;
+  };
+
+  private readonly preventBrowserTouchGesture = (event: Event): void => {
+    if (event.cancelable) event.preventDefault();
   };
 }
