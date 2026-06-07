@@ -3,6 +3,7 @@ import { createInputState, InputProvider, InputState } from './InputState';
 export class TouchInput implements InputProvider {
   private state = createInputState();
   private readonly activeButtons = new Set<string>();
+  private readonly buttonPointers = new Map<number, string>();
   private movePointer: number | null = null;
   private cameraPointer: number | null = null;
   private moveOrigin = { x: 0, y: 0 };
@@ -66,7 +67,10 @@ export class TouchInput implements InputProvider {
     const target = event.target as HTMLElement;
     const button = target.closest('button') as HTMLButtonElement | null;
     const zone = (target.closest('[data-zone]') as HTMLElement | null)?.dataset.zone;
-    if (button?.dataset.action) this.activeButtons.add(button.dataset.action);
+    if (button?.dataset.action) {
+      this.activeButtons.add(button.dataset.action);
+      this.buttonPointers.set(event.pointerId, button.dataset.action);
+    }
     if (zone === 'move') {
       this.movePointer = event.pointerId;
       this.moveOrigin = { x: event.clientX, y: event.clientY };
@@ -95,7 +99,13 @@ export class TouchInput implements InputProvider {
     event.preventDefault();
     const target = event.target as HTMLElement;
     const button = target.closest('button') as HTMLButtonElement | null;
-    if (button?.dataset.action) this.activeButtons.delete(button.dataset.action);
+    const pointerAction = this.buttonPointers.get(event.pointerId);
+    if (pointerAction) {
+      this.buttonPointers.delete(event.pointerId);
+      this.syncActiveButtons();
+    } else if (button?.dataset.action) {
+      this.activeButtons.delete(button.dataset.action);
+    }
     if (event.pointerId === this.movePointer) {
       this.movePointer = null;
       this.state.move = { x: 0, y: 0 };
@@ -106,4 +116,9 @@ export class TouchInput implements InputProvider {
   private readonly preventBrowserTouchGesture = (event: Event): void => {
     if (event.cancelable) event.preventDefault();
   };
+
+  private syncActiveButtons(): void {
+    this.activeButtons.clear();
+    for (const action of this.buttonPointers.values()) this.activeButtons.add(action);
+  }
 }

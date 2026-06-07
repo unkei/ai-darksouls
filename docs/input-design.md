@@ -46,4 +46,6 @@ Touch controls are visible on small/coarse-pointer viewports and hidden on deskt
 
 iOS Safari double-tap zoom is disabled for gameplay. The viewport locks maximum scale and root styles use `touch-action: manipulation` while the canvas and touch controls keep direct pointer handling with `touch-action: none`. Touch controls also cancel touch and gesture events so repeated attack taps are not interpreted as browser zoom gestures.
 
+Touch buttons track the pointer id that pressed each action. Release and cancel events clear actions by pointer id instead of event target because captured iOS pointer events may be retargeted to the controls root during multitouch. This keeps virtual stick movement and attack button releases independent.
+
 MVP does not implement remapping, but action names are stable so remapping can be added later.

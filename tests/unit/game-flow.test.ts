@@ -73,4 +73,42 @@ describe('GameFlow', () => {
     flow.update({ advance: true, interact: false, playerDead: true, bossDead: false });
     expect(flow.state).toBe('Playing');
   });
+
+  it('returns from game over to the opening after the retry timeout', () => {
+    const flow = new GameFlow();
+    flow.update({ advance: true, interact: false, playerDead: false, bossDead: false });
+    flow.update({ advance: false, interact: false, playerDead: true, bossDead: false });
+
+    flow.update({ advance: false, interact: false, playerDead: true, bossDead: false, delta: 7.9 });
+    expect(flow.state).toBe('GameOver');
+
+    flow.update({ advance: false, interact: false, playerDead: true, bossDead: false, delta: 0.2 });
+    expect(flow.state).toBe('Opening');
+  });
+
+  it('requires release before starting after an automatic game-over title return', () => {
+    const flow = new GameFlow();
+    flow.update({ advance: true, interact: false, playerDead: false, bossDead: false });
+    flow.update({ advance: true, interact: false, playerDead: true, bossDead: false });
+    flow.update({ advance: true, interact: false, playerDead: true, bossDead: false, delta: 8.1 });
+    expect(flow.state).toBe('Opening');
+
+    flow.update({ advance: true, interact: false, playerDead: false, bossDead: false });
+    expect(flow.state).toBe('Opening');
+
+    flow.update({ advance: false, interact: false, playerDead: false, bossDead: false });
+    flow.update({ advance: true, interact: false, playerDead: false, bossDead: false });
+    expect(flow.state).toBe('Playing');
+  });
+
+  it('returns from ending to the opening after the ending hold', () => {
+    const flow = new GameFlow();
+    flow.forceStateForTest('Ending');
+
+    flow.update({ advance: false, interact: false, playerDead: false, bossDead: true, delta: 35.9 });
+    expect(flow.state).toBe('Ending');
+
+    flow.update({ advance: false, interact: false, playerDead: false, bossDead: true, delta: 0.2 });
+    expect(flow.state).toBe('Opening');
+  });
 });

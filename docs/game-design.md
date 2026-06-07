@@ -72,10 +72,10 @@ Enemies use telegraph, active, and recovery windows. Attacks should be readable 
 
 - `Opening`: title/start presentation. Interact enters gameplay.
 - `Playing`: normal exploration and combat.
-- `GameOver`: entered on player death. Interact retries from the active cinder shrine.
+- `GameOver`: entered on player death. Interact retries from the active cinder shrine after advance inputs have been released once. If the player does not retry, the flow returns to `Opening` after 8 seconds and resets the run for title start.
 - `BossDefeat`: entered when the Ashen Warden reaches zero HP. Input does not advance this state; the boss collapse animation must finish first.
 - `Clear`: entered when the Ashen Warden is defeated. Interact advances to the ending.
-- `Ending`: staff roll presentation with a slow arena orbit camera. Credits include `unno`, and the presentation ends on a visible `The End` hold so it does not read as a hang.
+- `Ending`: staff roll presentation with a slow arena orbit camera. Credits include `unno`, and the presentation ends on a visible `The End` hold so it does not read as a hang. After 36 seconds, the flow returns to `Opening` and resets the run for title start.
 
 Minor enemy routes and the boss encounter should read as separate beats. The HUD labels the current encounter mode, the boss arena approach uses distinct ruined courtyard visuals, and the Ashen Warden remains the only boss-class enemy in the final arena.
 
